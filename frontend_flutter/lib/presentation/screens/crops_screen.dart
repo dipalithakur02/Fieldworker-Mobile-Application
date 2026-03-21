@@ -4,7 +4,9 @@ import '../../data/models/crop_model.dart';
 import '../../data/repositories/crop_repository.dart';
 
 class CropsScreen extends StatefulWidget {
-  const CropsScreen({Key? key}) : super(key: key);
+  final String? farmerId;
+
+  const CropsScreen({super.key, this.farmerId});
 
   @override
   State<CropsScreen> createState() => _CropsScreenState();
@@ -22,7 +24,9 @@ class _CropsScreenState extends State<CropsScreen> {
   }
 
   Future<void> _loadCrops() async {
-    final crops = await _repository.getAllCrops();
+    final crops = widget.farmerId == null
+        ? await _repository.getAllCrops()
+        : await _repository.getCropsByFarmer(widget.farmerId!);
 
     setState(() {
       _crops = crops;
@@ -67,7 +71,7 @@ class _CropsScreenState extends State<CropsScreen> {
     return Scaffold(
       backgroundColor: const Color(AppConstants.secondaryColor).withOpacity(0.1),
       appBar: AppBar(
-        title: const Text("Crops"),
+        title: Text(widget.farmerId == null ? "Crops" : "Farmer Crops"),
         backgroundColor: const Color(AppConstants.primaryColor),
       ),
       body: _loading
@@ -89,7 +93,7 @@ class _CropsScreenState extends State<CropsScreen> {
         backgroundColor: const Color(AppConstants.primaryColor),
         child: const Icon(Icons.add),
         onPressed: () {
-          Navigator.pushNamed(context, '/crop-entry');
+          Navigator.pushNamed(context, '/farmers');
         },
       ),
     );

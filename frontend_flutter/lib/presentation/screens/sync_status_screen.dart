@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/services/sync_service.dart';
 import '../../core/utils/helpers.dart';
 import '../../core/utils/network_checker.dart';
+import '../providers/farmer_provider.dart';
+import '../providers/crop_provider.dart';
 
 class SyncStatusScreen extends StatefulWidget {
   @override
@@ -27,10 +30,15 @@ class _SyncStatusScreenState extends State<SyncStatusScreen> {
     setState(() => _isSyncing = true);
     try {
       await SyncService.syncNow();
+      if (!mounted) return;
+      await context.read<FarmerProvider>().loadFarmers();
+      await context.read<CropProvider>().loadCrops();
       Helpers.showSnackBar(context, 'Sync completed successfully');
     } catch (e) {
+      if (!mounted) return;
       Helpers.showSnackBar(context, 'Sync failed', isError: true);
     } finally {
+      if (!mounted) return;
       setState(() => _isSyncing = false);
     }
   }

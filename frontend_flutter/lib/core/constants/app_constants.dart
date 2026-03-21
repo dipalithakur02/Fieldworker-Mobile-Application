@@ -10,7 +10,7 @@ class AppConstants {
   
   // Database
   static const String dbName = 'fieldworker.db';
-  static const int dbVersion = 1;
+  static const int dbVersion = 2;
   
   // Sync
   static const int syncIntervalMinutes = 15;

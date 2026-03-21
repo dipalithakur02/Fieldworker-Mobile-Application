@@ -22,9 +22,13 @@ class CropModel {
   });
 
   factory CropModel.fromJson(Map<String, dynamic> json) {
+    final farmerValue = json['farmerId'];
+
     return CropModel(
       id: json['_id'] ?? json['id'],
-      farmerId: json['farmerId'],
+      farmerId: farmerValue is Map<String, dynamic>
+          ? (farmerValue['_id'] ?? farmerValue['id'] ?? '')
+          : farmerValue,
       cropName: json['cropName'],
       cropType: json['cropType'],
       area: json['area'].toDouble(),

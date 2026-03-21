@@ -6,7 +6,7 @@ const upload = require('../middleware/upload');
 
 router.use(protect);
 
-router.post('/', upload.single('image'), cropController.createCrop);
+router.post('/', upload.single('image'),cropController.createCrop);
 router.get('/', cropController.getAllCrops);
 router.get('/farmer/:farmerId', cropController.getCropsByFarmer);
 router.put('/:id', cropController.updateCrop);

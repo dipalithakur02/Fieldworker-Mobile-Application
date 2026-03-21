@@ -31,7 +31,10 @@ class ApiService {
   /// POST
   static Future<Response> post(String path, dynamic data) async {
     try {
-      return await _dio.post(path, data: data);
+      final options = data is FormData
+          ? Options(contentType: 'multipart/form-data')
+          : null;
+      return await _dio.post(path, data: data, options: options);
     } on DioException catch (e) {
       throw Exception(_handleError(e));
     }

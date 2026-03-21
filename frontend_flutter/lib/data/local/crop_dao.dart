@@ -10,7 +10,7 @@ class CropDao {
   static Future<List<CropModel>> getAll() async {
     final db = await LocalDatabase.database;
     final List<Map<String, dynamic>> maps = await db.query('crops');
-    return List.generate(maps.length, (i) => CropModel.fromJson(maps[i]));
+    return List.generate(maps.length, (i) => CropModel.fromMap(maps[i]));
   }
 
   static Future<List<CropModel>> getByFarmerId(String farmerId) async {
@@ -20,7 +20,7 @@ class CropDao {
       where: 'farmerId = ?',
       whereArgs: [farmerId],
     );
-    return List.generate(maps.length, (i) => CropModel.fromJson(maps[i]));
+    return List.generate(maps.length, (i) => CropModel.fromMap(maps[i]));
   }
 
   static Future<int> update(CropModel crop) async {
@@ -50,5 +50,15 @@ class CropDao {
     return List.generate(maps.length, (i) {
       return CropModel.fromMap(maps[i]);
     });
+  }
+
+  static Future<void> updateSyncStatus(String id, String status) async {
+    final db = await LocalDatabase.database;
+    await db.update(
+      'crops',
+      {'syncStatus': status},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }

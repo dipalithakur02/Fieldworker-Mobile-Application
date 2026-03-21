@@ -10,7 +10,7 @@ class FarmerDao {
   static Future<List<FarmerModel>> getAll() async {
     final db = await LocalDatabase.database;
     final List<Map<String, dynamic>> maps = await db.query('farmers');
-    return List.generate(maps.length, (i) => FarmerModel.fromJson(maps[i]));
+    return List.generate(maps.length, (i) => FarmerModel.fromMap(maps[i]));
   }
 
   static Future<FarmerModel?> getById(String id) async {
@@ -21,7 +21,7 @@ class FarmerDao {
       whereArgs: [id],
     );
     if (maps.isEmpty) return null;
-    return FarmerModel.fromJson(maps.first);
+    return FarmerModel.fromMap(maps.first);
   }
 
   static Future<List<FarmerModel>> getPending() async {
@@ -31,7 +31,7 @@ class FarmerDao {
       where: 'syncStatus = ?',
       whereArgs: ['PENDING'],
     );
-    return List.generate(maps.length, (i) => FarmerModel.fromJson(maps[i]));
+    return List.generate(maps.length, (i) => FarmerModel.fromMap(maps[i]));
   }
 
   static Future<int> update(FarmerModel farmer) async {

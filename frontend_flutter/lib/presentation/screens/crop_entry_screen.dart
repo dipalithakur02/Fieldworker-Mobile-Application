@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../../core/utils/validators.dart';
 import '../../core/utils/helpers.dart';
 import '../../data/models/crop_model.dart';
@@ -26,6 +28,8 @@ class _CropEntryScreenState extends State<CropEntryScreen> {
   DateTime _sowingDate = DateTime.now();
 
   bool _isLoading = false;
+  String? _selectedImagePath;
+  final ImagePicker _imagePicker = ImagePicker();
 
   final List<String> _cropTypes = [
     'Cereal',
@@ -36,6 +40,19 @@ class _CropEntryScreenState extends State<CropEntryScreen> {
   ];
 
   final List<String> _seasons = ['Kharif', 'Rabi', 'Zaid'];
+
+  Future<void> _pickCropImage() async {
+    final pickedFile = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+
+    if (pickedFile == null) {
+      return;
+    }
+
+    setState(() => _selectedImagePath = pickedFile.path);
+  }
 
   Future<void> _saveCrop() async {
     if (!_formKey.currentState!.validate()) return;
@@ -50,6 +67,7 @@ class _CropEntryScreenState extends State<CropEntryScreen> {
         area: double.parse(_areaController.text),
         season: _selectedSeason,
         sowingDate: _sowingDate,
+        imagePath: _selectedImagePath,
       );
 
       // 🔍 Debug: print crop data
@@ -60,17 +78,22 @@ class _CropEntryScreenState extends State<CropEntryScreen> {
       debugPrint("Area: ${crop.area}");
       debugPrint("Season: ${crop.season}");
       debugPrint("Sowing Date: ${crop.sowingDate}");
+      debugPrint("Image Path: ${crop.imagePath ?? 'No image selected'}");
       debugPrint("----------------------");
 
       await context.read<CropProvider>().addCrop(crop);
+
+      if (!mounted) return;
 
       Helpers.showSnackBar(context, "Crop saved (offline sync enabled)");
 
       Navigator.pop(context);
     } catch (e) {
+      if (!mounted) return;
       Helpers.showSnackBar(context, "Failed to add crop", isError: true);
     }
 
+    if (!mounted) return;
     setState(() => _isLoading = false);
   }
 
@@ -164,6 +187,58 @@ class _CropEntryScreenState extends State<CropEntryScreen> {
                           borderRadius: BorderRadius.circular(12)),
                     ),
                     validator: (v) => Validators.validateRequired(v, "Area"),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  _buildSectionTitle("Crop Image (Optional)"),
+
+                  GestureDetector(
+                    onTap: _pickCropImage,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade400),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: _selectedImagePath == null
+                          ? const Row(
+                              children: [
+                                Icon(Icons.image_outlined),
+                                SizedBox(width: 10),
+                                Text('Tap to select crop image'),
+                              ],
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.file(
+                                    File(_selectedImagePath!),
+                                    height: 150,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('Image selected'),
+                                    TextButton.icon(
+                                      onPressed: () {
+                                        setState(() => _selectedImagePath = null);
+                                      },
+                                      icon: const Icon(Icons.delete_outline),
+                                      label: const Text('Remove'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                    ),
                   ),
 
                   const SizedBox(height: 20),

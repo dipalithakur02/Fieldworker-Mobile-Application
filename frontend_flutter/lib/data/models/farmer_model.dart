@@ -1,5 +1,6 @@
 class FarmerModel {
   final String? id;
+  final String? serverId;
   final String name;
   final String village;
   final String mobile;
@@ -11,6 +12,7 @@ class FarmerModel {
 
   FarmerModel({
     this.id,
+    this.serverId,
     required this.name,
     required this.village,
     required this.mobile,
@@ -24,7 +26,8 @@ class FarmerModel {
   /// API / MongoDB → Model
   factory FarmerModel.fromJson(Map<String, dynamic> json) {
     return FarmerModel(
-      id: json['_id'] ?? json['id'],   // handle MongoDB _id and SQLite id
+      id: json['id'] ?? json['_id'],
+      serverId: json['serverId'] ?? json['_id'],
       name: json['name'],
       village: json['village'],
       mobile: json['mobile'],
@@ -46,6 +49,7 @@ class FarmerModel {
   factory FarmerModel.fromMap(Map<String, dynamic> map) {
     return FarmerModel(
       id: map['id'],
+      serverId: map['serverId'],
       name: map['name'],
       village: map['village'],
       mobile: map['mobile'],
@@ -81,6 +85,7 @@ class FarmerModel {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'serverId': serverId,
       'name': name,
       'village': village,
       'mobile': mobile,
@@ -95,6 +100,7 @@ class FarmerModel {
   /// Helpful for updates
   FarmerModel copyWith({
     String? id,
+    String? serverId,
     String? name,
     String? village,
     String? mobile,
@@ -106,6 +112,7 @@ class FarmerModel {
   }) {
     return FarmerModel(
       id: id ?? this.id,
+      serverId: serverId ?? this.serverId,
       name: name ?? this.name,
       village: village ?? this.village,
       mobile: mobile ?? this.mobile,

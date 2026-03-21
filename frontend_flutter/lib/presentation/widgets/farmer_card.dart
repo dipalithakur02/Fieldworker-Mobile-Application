@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/models/farmer_model.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import '../screens/crop_entry_screen.dart';
-
 class FarmerCard extends StatelessWidget {
   final FarmerModel farmer;
 
@@ -115,19 +112,34 @@ class FarmerCard extends StatelessWidget {
                       return;
                     }
 
-                    Navigator.push(
+                    Navigator.pushNamed(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => CropEntryScreen(
-                          farmerId: farmer.id!,
-                        ),
-                      ),
+                      '/crop-entry',
+                      arguments: farmer.id!,
                     );
                   },
                   icon: Icon(Icons.add),
                   label: Text('Add Crop'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF2E7D32),
+                    minimumSize: Size(double.infinity, 40),
+                  ),
+                ),
+                SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    if (farmer.id == null) {
+                      return;
+                    }
+                    Navigator.pushNamed(
+                      context,
+                      '/crops',
+                      arguments: farmer.id!,
+                    );
+                  },
+                  icon: Icon(Icons.list_alt),
+                  label: Text('View Crops'),
+                  style: OutlinedButton.styleFrom(
                     minimumSize: Size(double.infinity, 40),
                   ),
                 ),

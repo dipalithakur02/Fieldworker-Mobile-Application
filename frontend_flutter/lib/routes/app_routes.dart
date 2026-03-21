@@ -35,7 +35,10 @@ class AppRoutes {
       case farmers:
         return MaterialPageRoute(builder: (_) => FarmersListScreen());
       case cropEntry:
-        final farmerId = settings.arguments as String;
+        final farmerId = settings.arguments as String?;
+        if (farmerId == null || farmerId.isEmpty) {
+          return MaterialPageRoute(builder: (_) => FarmersListScreen());
+        }
         return MaterialPageRoute(builder: (_) => CropEntryScreen(farmerId: farmerId));
       case syncStatus:
         return MaterialPageRoute(builder: (_) => SyncStatusScreen());
@@ -44,7 +47,8 @@ class AppRoutes {
       case weather:
         return MaterialPageRoute(builder: (_) => WeatherScreen());
       case crops:
-        return MaterialPageRoute(builder: (_) => CropsScreen());
+        final farmerId = settings.arguments as String?;
+        return MaterialPageRoute(builder: (_) => CropsScreen(farmerId: farmerId));
       default:
         return MaterialPageRoute(builder: (_) => LoginScreen());
     }

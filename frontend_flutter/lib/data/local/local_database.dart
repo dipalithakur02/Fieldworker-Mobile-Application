@@ -18,6 +18,7 @@ class LocalDatabase {
       path,
       version: AppConstants.dbVersion,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -25,6 +26,7 @@ class LocalDatabase {
     await db.execute('''
       CREATE TABLE farmers (
         id TEXT PRIMARY KEY,
+        serverId TEXT,
         name TEXT NOT NULL,
         village TEXT NOT NULL,
         mobile TEXT NOT NULL,
@@ -50,5 +52,17 @@ class LocalDatabase {
         FOREIGN KEY (farmerId) REFERENCES farmers (id)
       )
     ''');
+  }
+
+  static Future<void> _onUpgrade(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
+    if (oldVersion < 2) {
+      await db.execute(
+        'ALTER TABLE farmers ADD COLUMN serverId TEXT',
+      );
+    }
   }
 }

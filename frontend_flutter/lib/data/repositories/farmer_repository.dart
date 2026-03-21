@@ -9,6 +9,7 @@ class FarmerRepository {
     final id = Uuid().v4();
     final newFarmer = FarmerModel(
       id: id,
+      serverId: null,
       name: farmer.name,
       village: farmer.village,
       mobile: farmer.mobile,
@@ -24,7 +25,16 @@ class FarmerRepository {
     if (await NetworkChecker.isConnected()) {
       try {
         final response = await ApiService.post('/farmers', newFarmer.toJson());
-        final syncedFarmer = FarmerModel.fromJson(response.data['data']);
+        final serverId = _extractMongoId(response.data);
+
+        if (serverId == null) {
+          throw Exception('Unable to read MongoDB farmer ID from response');
+        }
+
+        final syncedFarmer = newFarmer.copyWith(
+          serverId: serverId,
+          syncStatus: 'SYNCED',
+        );
         await FarmerDao.update(syncedFarmer);
         return syncedFarmer;
       } catch (e) {
@@ -42,12 +52,73 @@ class FarmerRepository {
   Future<void> syncPendingFarmers() async {
     final pending = await FarmerDao.getPending();
     for (var farmer in pending) {
+      final existingServerId = farmer.serverId?.trim();
+      if (existingServerId != null && existingServerId.isNotEmpty) {
+        await FarmerDao.update(
+          farmer.copyWith(
+            syncStatus: 'SYNCED',
+          ),
+        );
+        continue;
+      }
+
       try {
         final response = await ApiService.post('/farmers', farmer.toJson());
-        await FarmerDao.updateSyncStatus(farmer.id!, 'SYNCED');
+        final serverId = _extractMongoId(response.data);
+
+        if (serverId == null) {
+          continue;
+        }
+
+        await FarmerDao.update(
+          farmer.copyWith(
+            serverId: serverId,
+            syncStatus: 'SYNCED',
+          ),
+        );
       } catch (e) {
         print('Sync failed for farmer: ${farmer.id}');
       }
+    }
+  }
+
+  Future<FarmerModel?> syncFarmerByLocalId(String localFarmerId) async {
+    final farmer = await FarmerDao.getById(localFarmerId);
+
+    if (farmer == null) {
+      return null;
+    }
+
+    final existingServerId = farmer.serverId?.trim();
+    if (existingServerId != null && existingServerId.isNotEmpty) {
+      if (farmer.syncStatus != 'SYNCED') {
+        final updated = farmer.copyWith(syncStatus: 'SYNCED');
+        await FarmerDao.update(updated);
+        return updated;
+      }
+      return farmer;
+    }
+
+    if (!await NetworkChecker.isConnected()) {
+      return farmer;
+    }
+
+    try {
+      final response = await ApiService.post('/farmers', farmer.toJson());
+      final serverId = _extractMongoId(response.data);
+
+      if (serverId == null) {
+        return farmer;
+      }
+
+      final syncedFarmer = farmer.copyWith(
+        serverId: serverId,
+        syncStatus: 'SYNCED',
+      );
+      await FarmerDao.update(syncedFarmer);
+      return syncedFarmer;
+    } catch (e) {
+      return farmer;
     }
   }
 
@@ -57,5 +128,36 @@ class FarmerRepository {
 
   Future<void> deleteFarmer(String id) async {
     await FarmerDao.delete(id);
+  }
+
+  String? _extractMongoId(dynamic responseData) {
+    final candidates = <dynamic>[];
+
+    if (responseData is Map<String, dynamic>) {
+      candidates.add(responseData);
+
+      final data = responseData['data'];
+      candidates.add(data);
+
+      if (data is Map<String, dynamic>) {
+        candidates.add(data['farmer']);
+        candidates.add(data['item']);
+      }
+    }
+
+    for (final candidate in candidates) {
+      if (candidate is String && candidate.isNotEmpty) {
+        return candidate;
+      }
+
+      if (candidate is Map<String, dynamic>) {
+        final id = candidate['_id'] ?? candidate['id'] ?? candidate['serverId'];
+        if (id is String && id.isNotEmpty) {
+          return id;
+        }
+      }
+    }
+
+    return null;
   }
 }
