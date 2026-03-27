@@ -259,4 +259,4 @@ MIT License
 
 Built with ❤️ for Agriculture Extension Workers
 
-**Contact:** Your contact information here
+
