@@ -4,8 +4,10 @@ import '../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
 class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
+
   @override
-  _DashboardScreenState createState() => _DashboardScreenState();
+  State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
@@ -13,27 +15,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<FarmerProvider>(context, listen: false).loadFarmers();
+      final authProvider = context.read<AuthProvider>();
+      if (authProvider.isFieldWorker) {
+        context.read<FarmerProvider>().loadFarmers();
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final isFarmer = authProvider.isFarmer;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dashboard'),
-        backgroundColor: Color(0xFF2E7D32),
+        title: const Text('Dashboard'),
+        backgroundColor: const Color(0xFF2E7D32),
         actions: [
+          if (!isFarmer)
+            IconButton(
+              icon: const Icon(Icons.sync),
+              onPressed: () => Navigator.pushNamed(context, '/sync-status'),
+            ),
           IconButton(
-            icon: Icon(Icons.sync),
-            onPressed: () => Navigator.pushNamed(context, '/sync-status'),
-          ),
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () async {
-              await Provider.of<AuthProvider>(context, listen: false).logout();
-              Navigator.pushReplacementNamed(context, '/login');
-            },
+            icon: const Icon(Icons.person_outline),
+            onPressed: () => Navigator.pushNamed(context, '/profile'),
           ),
         ],
       ),
@@ -42,37 +48,77 @@ class _DashboardScreenState extends State<DashboardScreen> {
         padding: EdgeInsets.all(16),
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        children: [
-          _buildDashboardCard(
-            'Farmers',
-            Icons.people,
-            Colors.blue,
-            () => Navigator.pushNamed(context, '/farmers'),
-          ),
-          _buildDashboardCard(
-            'Add Farmer',
-            Icons.person_add,
-            Colors.green,
-            () => Navigator.pushNamed(context, '/farmer-registration'),
-          ),
-          _buildDashboardCard(
-            'Crops',
-            Icons.grass,
-            Colors.orange,
-                () => Navigator.pushNamed(context, '/crops'),
-          ),
-          _buildDashboardCard(
-            'Sync Status',
-            Icons.cloud_sync,
-            Colors.purple,
-            () => Navigator.pushNamed(context, '/sync-status'),
-          ),
-        ],
+        children: isFarmer
+            ? [
+                _buildDashboardCard(
+                  'My Crops',
+                  Icons.grass,
+                  Colors.orange,
+                  () => Navigator.pushNamed(context, '/crops'),
+                ),
+                _buildDashboardCard(
+                  'My Queries',
+                  Icons.question_answer_outlined,
+                  Colors.deepOrange,
+                  () => Navigator.pushNamed(context, '/queries'),
+                ),
+                _buildDashboardCard(
+                  'Weather',
+                  Icons.cloud_outlined,
+                  Colors.blue,
+                  () => Navigator.pushNamed(context, '/weather'),
+                ),
+                _buildDashboardCard(
+                  'Profile',
+                  Icons.badge_outlined,
+                  Colors.teal,
+                  () => Navigator.pushNamed(context, '/profile'),
+                ),
+              ]
+            : [
+                _buildDashboardCard(
+                  'Farmers',
+                  Icons.people,
+                  Colors.blue,
+                  () => Navigator.pushNamed(context, '/farmers'),
+                ),
+                _buildDashboardCard(
+                  'Add Farmer',
+                  Icons.person_add,
+                  Colors.green,
+                  () => Navigator.pushNamed(context, '/farmer-registration'),
+                ),
+                _buildDashboardCard(
+                  'Crops',
+                  Icons.grass,
+                  Colors.orange,
+                  () => Navigator.pushNamed(context, '/crops'),
+                ),
+                _buildDashboardCard(
+                  'Queries',
+                  Icons.question_answer_outlined,
+                  Colors.deepOrange,
+                  () => Navigator.pushNamed(context, '/queries'),
+                ),
+                _buildDashboardCard(
+                  'Sync Status',
+                  Icons.cloud_sync,
+                  Colors.purple,
+                  () => Navigator.pushNamed(context, '/sync-status'),
+                ),
+                _buildDashboardCard(
+                  'Profile',
+                  Icons.badge_outlined,
+                  Colors.teal,
+                  () => Navigator.pushNamed(context, '/profile'),
+                ),
+              ],
       ),
     );
   }
 
-  Widget _buildDashboardCard(String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildDashboardCard(
+      String title, IconData icon, Color color, VoidCallback onTap) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

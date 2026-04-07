@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../core/utils/validators.dart';
 import '../../core/utils/helpers.dart';
-import '../../data/repositories/auth_repository.dart';
 import '../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _identifierController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
@@ -23,12 +24,21 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      await authProvider.login(_emailController.text, _passwordController.text);
-      Navigator.pushReplacementNamed(context, '/dashboard');
+      await authProvider.login(
+        _identifierController.text.trim(),
+        _passwordController.text,
+      );
     } catch (e) {
-      Helpers.showSnackBar(context, 'Login failed: ${e.toString()}', isError: true);
+      if (!mounted) return;
+      Helpers.showSnackBar(
+        context,
+        'Login failed: ${e.toString()}',
+        isError: true,
+      );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -49,7 +59,8 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: EdgeInsets.all(24),
               child: Card(
                 elevation: 8,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
                 child: Padding(
                   padding: EdgeInsets.all(24),
                   child: Form(
@@ -57,23 +68,30 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.agriculture, size: 80, color: Color(0xFF2E7D32)),
+                        Icon(Icons.agriculture,
+                            size: 80, color: Color(0xFF2E7D32)),
                         SizedBox(height: 16),
                         Text(
-                          'Fieldworker App',
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                          'Farmer Crop App',
+                          style: TextStyle(
+                              fontSize: 24, fontWeight: FontWeight.bold),
                         ),
                         SizedBox(height: 8),
-                        Text('Login to continue', style: TextStyle(color: Colors.grey)),
+                        Text('Login to continue',
+                            style: TextStyle(color: Colors.grey)),
                         SizedBox(height: 32),
                         TextFormField(
-                          controller: _emailController,
+                          controller: _identifierController,
                           decoration: InputDecoration(
-                            labelText: 'Email',
-                            prefixIcon: Icon(Icons.email),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            labelText: 'Email or Mobile',
+                            prefixIcon: Icon(Icons.person_outline),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
                           ),
-                          validator: Validators.validateEmail,
+                          validator: (value) => Validators.validateRequired(
+                            value,
+                            'Email or Mobile',
+                          ),
                           keyboardType: TextInputType.emailAddress,
                         ),
                         SizedBox(height: 16),
@@ -82,7 +100,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           decoration: InputDecoration(
                             labelText: 'Password',
                             prefixIcon: Icon(Icons.lock),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
                           ),
                           validator: Validators.validatePassword,
                           obscureText: true,
@@ -95,7 +114,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: _isLoading ? null : _login,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Color(0xFF2E7D32),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
                             ),
                             child: _isLoading
                                 ? CircularProgressIndicator(color: Colors.white)
@@ -104,11 +124,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         SizedBox(height: 16),
                         TextButton(
-                          onPressed: () => Navigator.pushNamed(context, '/forgot-password'),
+                          onPressed: () =>
+                              Navigator.pushNamed(context, '/forgot-password'),
                           child: Text('Forgot Password?'),
                         ),
                         TextButton(
-                          onPressed: () => Navigator.pushNamed(context, '/register'),
+                          onPressed: () =>
+                              Navigator.pushNamed(context, '/register'),
                           child: Text('Don\'t have an account? Register'),
                         ),
                       ],

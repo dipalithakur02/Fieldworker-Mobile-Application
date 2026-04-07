@@ -34,10 +34,12 @@
       margin-bottom: 30px;
     }
 
-    .logo svg {
-      width: 80px;
-      height: 80px;
-      fill: #2E7D32;
+    .logo img {
+      width: 84px;
+      height: 84px;
+      object-fit: contain;
+      border-radius: 24px;
+      box-shadow: 0 14px 30px rgba(46, 125, 50, 0.18);
     }
 
     h1 {
@@ -115,14 +117,27 @@
       font-size: 12px;
       text-align: center;
     }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 16px;
+      }
+
+      .login-container {
+        padding: 28px 20px;
+        border-radius: 14px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="login-container">
     <div class="logo">
-      <svg viewBox="0 0 24 24">
-        <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6M12,8A4,4 0 0,0 8,12A4,4 0 0,0 12,16A4,4 0 0,0 16,12A4,4 0 0,0 12,8Z"/>
-      </svg>
+      <img src="/images/app-icon.png" alt="Farmer Crop App">
     </div>
     
     <h1>Admin Dashboard</h1>
@@ -148,9 +163,9 @@
     </form>
 
     <div class="info">
-      <strong>Demo Credentials:</strong><br>
-      Email: admin@farmercrop.com<br>
-      Password: admin123
+      <strong>Admin account required:</strong><br>
+      Sign in with a backend user whose role is set to <code>admin</code>.<br>
+      Regular field worker accounts cannot access this dashboard.
     </div>
   </div>
 </body>

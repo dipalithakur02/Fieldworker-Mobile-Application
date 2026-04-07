@@ -8,6 +8,7 @@ const farmerSchema = new mongoose.Schema({
   latitude: { type: Number },
   longitude: { type: Number },
   syncStatus: { type: String, enum: ['SYNCED', 'PENDING'], default: 'SYNCED' },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 }, { timestamps: true });
 

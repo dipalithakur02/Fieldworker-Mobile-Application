@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../data/models/farmer_model.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'avatar_view.dart';
+
 class FarmerCard extends StatelessWidget {
   final FarmerModel farmer;
+  final Future<void> Function()? onDelete;
+  final Future<void> Function()? onEdit;
 
-  FarmerCard({required this.farmer});
+  const FarmerCard({
+    super.key,
+    required this.farmer,
+    this.onDelete,
+    this.onEdit,
+  });
 
   Future<void> _makePhoneCall(String phoneNumber) async {
     final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
@@ -28,9 +37,10 @@ class FarmerCard extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ExpansionTile(
-        leading: CircleAvatar(
-          backgroundColor: Color(0xFF2E7D32),
-          child: Icon(Icons.person, color: Colors.white),
+        leading: AvatarView(
+          imagePath: farmer.profileImagePath,
+          fallbackLabel: farmer.name,
+          radius: 22,
         ),
         title: Text(
           farmer.name,
@@ -77,28 +87,34 @@ class FarmerCard extends StatelessWidget {
                   ListTile(
                     leading: Icon(Icons.location_on, color: Colors.red),
                     title: Text('Location'),
-                    subtitle: Text('${farmer.latitude!.toStringAsFixed(4)}, ${farmer.longitude!.toStringAsFixed(4)}'),
+                    subtitle: Text(
+                        '${farmer.latitude!.toStringAsFixed(4)}, ${farmer.longitude!.toStringAsFixed(4)}'),
                   ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  alignment: WrapAlignment.center,
                   children: [
                     ElevatedButton.icon(
                       onPressed: () => _makePhoneCall(farmer.mobile),
                       icon: Icon(Icons.call, size: 18),
                       label: Text('Call'),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green),
                     ),
                     ElevatedButton.icon(
                       onPressed: () => _sendSMS(farmer.mobile),
                       icon: Icon(Icons.sms, size: 18),
                       label: Text('SMS'),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue),
                     ),
                     ElevatedButton.icon(
                       onPressed: () => _openWhatsApp(farmer.mobile),
                       icon: Icon(Icons.chat, size: 18),
                       label: Text('WhatsApp'),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.teal),
                     ),
                   ],
                 ),
@@ -141,6 +157,25 @@ class FarmerCard extends StatelessWidget {
                   label: Text('View Crops'),
                   style: OutlinedButton.styleFrom(
                     minimumSize: Size(double.infinity, 40),
+                  ),
+                ),
+                SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit_outlined),
+                  label: const Text('Edit Farmer'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 40),
+                  ),
+                ),
+                SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: onDelete,
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  label: const Text('Delete Farmer'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 40),
+                    foregroundColor: Colors.red,
                   ),
                 ),
               ],

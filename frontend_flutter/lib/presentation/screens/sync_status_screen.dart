@@ -56,7 +56,8 @@ class _SyncStatusScreenState extends State<SyncStatusScreen> {
           children: [
             Card(
               elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: Column(
@@ -69,7 +70,8 @@ class _SyncStatusScreenState extends State<SyncStatusScreen> {
                     SizedBox(height: 16),
                     Text(
                       _isOnline ? 'Online' : 'Offline',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 8),
                     Text(
@@ -92,13 +94,15 @@ class _SyncStatusScreenState extends State<SyncStatusScreen> {
                     ? SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2),
                       )
                     : Icon(Icons.sync),
                 label: Text(_isSyncing ? 'Syncing...' : 'Sync Now'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFF2E7D32),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ),

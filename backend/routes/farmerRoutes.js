@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const farmerController = require('../controllers/farmerController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../middleware/authMiddleware');
 
 router.use(protect);
+router.use(authorize('fieldworker', 'admin'));
 
 router.post('/', farmerController.createFarmer);
 router.get('/', farmerController.getAllFarmers);

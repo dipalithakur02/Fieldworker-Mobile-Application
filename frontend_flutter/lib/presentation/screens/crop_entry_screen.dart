@@ -10,8 +10,13 @@ import '../../core/constants/app_constants.dart';
 
 class CropEntryScreen extends StatefulWidget {
   final String farmerId;
+  final CropModel? existingCrop;
 
-  const CropEntryScreen({required this.farmerId, Key? key}) : super(key: key);
+  const CropEntryScreen({
+    required this.farmerId,
+    this.existingCrop,
+    super.key,
+  });
 
   @override
   State<CropEntryScreen> createState() => _CropEntryScreenState();
@@ -41,6 +46,24 @@ class _CropEntryScreenState extends State<CropEntryScreen> {
 
   final List<String> _seasons = ['Kharif', 'Rabi', 'Zaid'];
 
+  bool get _isEditing => widget.existingCrop != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final crop = widget.existingCrop;
+    if (crop == null) {
+      return;
+    }
+
+    _cropNameController.text = crop.cropName;
+    _areaController.text = crop.area.toString();
+    _selectedCropType = crop.cropType;
+    _selectedSeason = crop.season;
+    _sowingDate = crop.sowingDate;
+    _selectedImagePath = crop.imagePath;
+  }
+
   Future<void> _pickCropImage() async {
     final pickedFile = await _imagePicker.pickImage(
       source: ImageSource.gallery,
@@ -61,6 +84,8 @@ class _CropEntryScreenState extends State<CropEntryScreen> {
 
     try {
       final crop = CropModel(
+        id: widget.existingCrop?.id,
+        serverId: widget.existingCrop?.serverId,
         farmerId: widget.farmerId,
         cropName: _cropNameController.text.trim(),
         cropType: _selectedCropType,
@@ -68,24 +93,23 @@ class _CropEntryScreenState extends State<CropEntryScreen> {
         season: _selectedSeason,
         sowingDate: _sowingDate,
         imagePath: _selectedImagePath,
+        syncStatus: widget.existingCrop?.syncStatus ?? 'PENDING',
       );
 
-      // 🔍 Debug: print crop data
-      debugPrint("------ Crop Data ------");
-      debugPrint("Farmer ID: ${crop.farmerId}");
-      debugPrint("Crop Name: ${crop.cropName}");
-      debugPrint("Crop Type: ${crop.cropType}");
-      debugPrint("Area: ${crop.area}");
-      debugPrint("Season: ${crop.season}");
-      debugPrint("Sowing Date: ${crop.sowingDate}");
-      debugPrint("Image Path: ${crop.imagePath ?? 'No image selected'}");
-      debugPrint("----------------------");
-
-      await context.read<CropProvider>().addCrop(crop);
+      if (_isEditing) {
+        await context.read<CropProvider>().updateCrop(crop);
+      } else {
+        await context.read<CropProvider>().addCrop(crop);
+      }
 
       if (!mounted) return;
 
-      Helpers.showSnackBar(context, "Crop saved (offline sync enabled)");
+      Helpers.showSnackBar(
+        context,
+        _isEditing
+            ? "Crop updated (offline sync enabled)"
+            : "Crop saved (offline sync enabled)",
+      );
 
       Navigator.pop(context);
     } catch (e) {
@@ -113,34 +137,100 @@ class _CropEntryScreenState extends State<CropEntryScreen> {
     );
   }
 
+  Widget _buildImageSelector() {
+    final imagePath = _selectedImagePath;
+    final localImageExists = imagePath != null &&
+        imagePath.isNotEmpty &&
+        File(imagePath).existsSync();
+
+    return GestureDetector(
+      onTap: _pickCropImage,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade400),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: imagePath == null
+            ? const Row(
+                children: [
+                  Icon(Icons.image_outlined),
+                  SizedBox(width: 10),
+                  Text('Tap to select crop image'),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (localImageExists)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(
+                        File(imagePath),
+                        height: 150,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  else
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text('Existing crop image is attached'),
+                    ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(localImageExists
+                          ? 'Image selected'
+                          : 'Image retained'),
+                      TextButton.icon(
+                        onPressed: () {
+                          setState(() => _selectedImagePath = null);
+                        },
+                        icon: const Icon(Icons.delete_outline),
+                        label: const Text('Remove'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(AppConstants.secondaryColor).withOpacity(0.1),
+      backgroundColor: const Color(
+        AppConstants.secondaryColor,
+      ).withValues(alpha: 0.1),
       appBar: AppBar(
-        title: const Text("Add Crop"),
+        title: Text(_isEditing ? "Edit Crop" : "Add Crop"),
         backgroundColor: const Color(AppConstants.primaryColor),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Card(
           elevation: 4,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Form(
               key: _formKey,
               child: Column(
                 children: [
-
                   Icon(Icons.grass,
                       size: 80, color: Color(AppConstants.primaryColor)),
-
                   const SizedBox(height: 25),
-
                   _buildSectionTitle("Crop Name"),
-
                   TextFormField(
                     controller: _cropNameController,
                     decoration: InputDecoration(
@@ -152,13 +242,10 @@ class _CropEntryScreenState extends State<CropEntryScreen> {
                     validator: (v) =>
                         Validators.validateRequired(v, "Crop Name"),
                   ),
-
                   const SizedBox(height: 20),
-
                   _buildSectionTitle("Crop Type"),
-
                   DropdownButtonFormField<String>(
-                    value: _selectedCropType,
+                    initialValue: _selectedCropType,
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.category),
                       border: OutlineInputBorder(
@@ -166,18 +253,14 @@ class _CropEntryScreenState extends State<CropEntryScreen> {
                     ),
                     items: _cropTypes
                         .map((type) => DropdownMenuItem(
-                      value: type,
-                      child: Text(type),
-                    ))
+                              value: type,
+                              child: Text(type),
+                            ))
                         .toList(),
-                    onChanged: (v) =>
-                        setState(() => _selectedCropType = v!),
+                    onChanged: (v) => setState(() => _selectedCropType = v!),
                   ),
-
                   const SizedBox(height: 20),
-
                   _buildSectionTitle("Area (Acres)"),
-
                   TextFormField(
                     controller: _areaController,
                     keyboardType: TextInputType.number,
@@ -188,65 +271,13 @@ class _CropEntryScreenState extends State<CropEntryScreen> {
                     ),
                     validator: (v) => Validators.validateRequired(v, "Area"),
                   ),
-
                   const SizedBox(height: 20),
-
                   _buildSectionTitle("Crop Image (Optional)"),
-
-                  GestureDetector(
-                    onTap: _pickCropImage,
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade400),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: _selectedImagePath == null
-                          ? const Row(
-                              children: [
-                                Icon(Icons.image_outlined),
-                                SizedBox(width: 10),
-                                Text('Tap to select crop image'),
-                              ],
-                            )
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.file(
-                                    File(_selectedImagePath!),
-                                    height: 150,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Text('Image selected'),
-                                    TextButton.icon(
-                                      onPressed: () {
-                                        setState(() => _selectedImagePath = null);
-                                      },
-                                      icon: const Icon(Icons.delete_outline),
-                                      label: const Text('Remove'),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                    ),
-                  ),
-
+                  _buildImageSelector(),
                   const SizedBox(height: 20),
-
                   _buildSectionTitle("Season"),
-
                   DropdownButtonFormField<String>(
-                    value: _selectedSeason,
+                    initialValue: _selectedSeason,
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.wb_sunny),
                       border: OutlineInputBorder(
@@ -254,18 +285,14 @@ class _CropEntryScreenState extends State<CropEntryScreen> {
                     ),
                     items: _seasons
                         .map((season) => DropdownMenuItem(
-                      value: season,
-                      child: Text(season),
-                    ))
+                              value: season,
+                              child: Text(season),
+                            ))
                         .toList(),
-                    onChanged: (v) =>
-                        setState(() => _selectedSeason = v!),
+                    onChanged: (v) => setState(() => _selectedSeason = v!),
                   ),
-
                   const SizedBox(height: 20),
-
                   _buildSectionTitle("Sowing Date"),
-
                   ListTile(
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -285,9 +312,7 @@ class _CropEntryScreenState extends State<CropEntryScreen> {
                       }
                     },
                   ),
-
                   const SizedBox(height: 30),
-
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -295,11 +320,10 @@ class _CropEntryScreenState extends State<CropEntryScreen> {
                       icon: const Icon(Icons.save),
                       label: _isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text("Save Crop"),
+                          : Text(_isEditing ? "Update Crop" : "Save Crop"),
                       onPressed: _isLoading ? null : _saveCrop,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                        const Color(AppConstants.primaryColor),
+                        backgroundColor: const Color(AppConstants.primaryColor),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                       ),

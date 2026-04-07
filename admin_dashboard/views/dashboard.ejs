@@ -17,32 +17,181 @@
 
     <main class="main-content">
         <div class="page-header">
-            <h1>Dashboard Overview</h1>
-            <p>Welcome back, <%= user.name %>!</p>
+            <h1>System Monitoring</h1>
+            <p>Admin visibility across users, farmers, crops, and farmer support queries.</p>
         </div>
 
-        <!-- Stats -->
         <div class="stats-grid">
-            <div class="stat-card blue"><h3><%= stats.totalUsers %></h3><p>Users</p></div>
-            <div class="stat-card green"><h3><%= stats.totalFarmers %></h3><p>Farmers</p></div>
-            <div class="stat-card orange"><h3><%= stats.totalCrops %></h3><p>Crops</p></div>
-            <div class="stat-card purple"><h3><%= stats.syncedFarmers %></h3><p>Synced</p></div>
+            <div class="stat-card blue">
+                <h3><%= stats.totalUsers %></h3>
+                <p>Total Users</p>
+            </div>
+            <div class="stat-card green">
+                <h3><%= stats.totalFieldworkers %></h3>
+                <p>Field Workers</p>
+            </div>
+            <div class="stat-card orange">
+                <h3><%= stats.totalFarmers %></h3>
+                <p>Farmer Profiles</p>
+            </div>
+            <div class="stat-card purple">
+                <h3><%= stats.totalFarmerAccounts %></h3>
+                <p>Farmer Accounts</p>
+            </div>
+            <div class="stat-card blue">
+                <h3><%= stats.totalCrops %></h3>
+                <p>Total Crops</p>
+            </div>
+            <div class="stat-card orange">
+                <h3><%= stats.totalQueries %></h3>
+                <p>Total Queries</p>
+            </div>
+            <div class="stat-card green">
+                <h3><%= stats.openQueries %></h3>
+                <p>Open Queries</p>
+            </div>
+            <div class="stat-card purple">
+                <h3><%= stats.resolvedQueries %></h3>
+                <p>Resolved Queries</p>
+            </div>
         </div>
 
-        <!-- Chart -->
         <div class="section">
             <h2>Analytics Overview</h2>
             <canvas id="dashboardChart" height="120"></canvas>
         </div>
+
+        <div class="dashboard-grid">
+            <section class="section">
+                <div class="section-header">
+                    <h2>Recent Farmer Registrations</h2>
+                    <a class="btn-link" href="/farmers">View all farmers</a>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Farmer</th>
+                            <th>Village</th>
+                            <th>Field Worker</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <% recentFarmers.forEach((farmer) => { %>
+                            <tr>
+                                <td>
+                                    <strong><%= farmer.name %></strong><br>
+                                    <span class="text-muted"><%= farmer.mobile %></span>
+                                </td>
+                                <td><%= farmer.village %></td>
+                                <td><%= farmer.createdBy?.name || 'N/A' %></td>
+                                <td>
+                                    <span class="badge <%= farmer.syncStatus === 'SYNCED' ? 'badge-success' : 'badge-warning' %>">
+                                        <%= farmer.syncStatus %>
+                                    </span>
+                                </td>
+                                <td><%= new Date(farmer.createdAt).toLocaleString() %></td>
+                            </tr>
+                        <% }); %>
+                        <% if (recentFarmers.length === 0) { %>
+                            <tr>
+                                <td colspan="5" class="empty-state">No farmers available</td>
+                            </tr>
+                        <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="section-header">
+                    <h2>Recent Farmer Queries</h2>
+                    <a class="btn-link" href="/queries">View all queries</a>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Farmer</th>
+                            <th>Crop</th>
+                            <th>Field Worker</th>
+                            <th>Status</th>
+                            <th>Raised</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <% recentQueries.forEach((query) => { %>
+                            <tr>
+                                <td><%= query.farmerId?.name || 'N/A' %></td>
+                                <td><%= query.cropId?.cropName || 'N/A' %></td>
+                                <td><%= query.fieldworkerId?.name || 'N/A' %></td>
+                                <td>
+                                    <span class="badge <%= query.status === 'RESOLVED' ? 'badge-success' : 'badge-warning' %>">
+                                        <%= query.status %>
+                                    </span>
+                                </td>
+                                <td><%= new Date(query.createdAt).toLocaleString() %></td>
+                            </tr>
+                        <% }); %>
+                        <% if (recentQueries.length === 0) { %>
+                            <tr>
+                                <td colspan="5" class="empty-state">No farmer queries yet</td>
+                            </tr>
+                        <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <section class="section">
+            <div class="section-header">
+                <h2>Field Worker Coverage</h2>
+                <a class="btn-link" href="/users">View all users</a>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Field Worker</th>
+                        <th>Contact</th>
+                        <th>Farmers Managed</th>
+                        <th>Open Queries</th>
+                        <th>Created</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <% topFieldworkers.forEach((fieldworker) => { %>
+                        <tr>
+                            <td><strong><%= fieldworker.name %></strong></td>
+                            <td><%= fieldworker.email || fieldworker.mobile || 'N/A' %></td>
+                            <td><%= fieldworker.farmersManaged %></td>
+                            <td><%= fieldworker.openQueries %></td>
+                            <td><%= new Date(fieldworker.createdAt).toLocaleDateString() %></td>
+                        </tr>
+                    <% }); %>
+                    <% if (topFieldworkers.length === 0) { %>
+                        <tr>
+                            <td colspan="5" class="empty-state">No field workers found</td>
+                        </tr>
+                    <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
 </div>
 
 <script>
     window.STATS = {
         totalUsers: <%= stats.totalUsers %>,
+        totalFieldworkers: <%= stats.totalFieldworkers %>,
         totalFarmers: <%= stats.totalFarmers %>,
         totalCrops: <%= stats.totalCrops %>,
-        syncedFarmers: <%= stats.syncedFarmers %>
+        openQueries: <%= stats.openQueries %>,
+        resolvedQueries: <%= stats.resolvedQueries %>
     };
 </script>
 

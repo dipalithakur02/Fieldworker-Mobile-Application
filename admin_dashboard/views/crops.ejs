@@ -38,6 +38,7 @@
                         <th>Type</th>
                         <th>Farmer</th>
                         <th>Village</th>
+                        <th>Field Worker</th>
                         <th>Area (acres)</th>
                         <th>Season</th>
                         <th>Sowing Date</th>
@@ -47,6 +48,8 @@
 
                     <tbody>
                     <% crops.forEach((crop, index) => { %>
+                        <% const cropFarmer = crop.farmerId && typeof crop.farmerId === 'object' ? crop.farmerId : null; %>
+                        <% const farmerId = cropFarmer ? cropFarmer._id : crop.farmerId; %>
                         <tr>
                             <td><%= index + 1 %></td>
 
@@ -57,20 +60,26 @@
                             <td><%= crop.cropType %></td>
 
                             <td>
-                                <% if (farmerMap[crop.farmerId]) { %>
-                                    <%= farmerMap[crop.farmerId].name %>
+                                <% if (cropFarmer) { %>
+                                    <%= cropFarmer.name %>
+                                <% } else if (farmerMap[farmerId]) { %>
+                                    <%= farmerMap[farmerId].name %>
                                 <% } else { %>
                                     <span class="text-muted">Unknown</span>
                                 <% } %>
                             </td>
 
                             <td>
-                                <% if (farmerMap[crop.farmerId]) { %>
-                                    <%= farmerMap[crop.farmerId].village %>
+                                <% if (cropFarmer) { %>
+                                    <%= cropFarmer.village %>
+                                <% } else if (farmerMap[farmerId]) { %>
+                                    <%= farmerMap[farmerId].village %>
                                 <% } else { %>
                                     <span class="text-muted">-</span>
                                 <% } %>
                             </td>
+
+                            <td><%= crop.createdBy?.name || 'N/A' %></td>
 
                             <td><%= crop.area %></td>
 
@@ -94,7 +103,7 @@
 
                     <% if (crops.length === 0) { %>
                         <tr>
-                            <td colspan="9" class="empty-state">
+                            <td colspan="10" class="empty-state">
                                 No crops added yet
                             </td>
                         </tr>

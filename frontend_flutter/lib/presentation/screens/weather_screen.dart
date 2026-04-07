@@ -20,7 +20,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
   Future<void> _loadWeather() async {
     setState(() => _isLoading = true);
     final position = await LocationService.getCurrentLocation();
-    
+
     if (position != null) {
       final weather = await WeatherService.getCurrentWeather(
         position.latitude,
@@ -81,26 +81,31 @@ class _WeatherScreenState extends State<WeatherScreen> {
                             children: [
                               Text(
                                 _weatherData!['name'] ?? 'Unknown',
-                                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                    fontSize: 28, fontWeight: FontWeight.bold),
                               ),
                               SizedBox(height: 16),
                               Icon(
-                                _getWeatherIcon(_weatherData!['weather'][0]['main']),
+                                _getWeatherIcon(
+                                    _weatherData!['weather'][0]['main']),
                                 size: 100,
                                 color: Color(0xFF2E7D32),
                               ),
                               SizedBox(height: 16),
                               Text(
                                 '${_weatherData!['main']['temp'].round()}°C',
-                                style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                    fontSize: 48, fontWeight: FontWeight.bold),
                               ),
                               Text(
                                 _weatherData!['weather'][0]['description'],
-                                style: TextStyle(fontSize: 18, color: Colors.grey),
+                                style:
+                                    TextStyle(fontSize: 18, color: Colors.grey),
                               ),
                               SizedBox(height: 24),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
                                 children: [
                                   _buildWeatherDetail(
                                     'Humidity',

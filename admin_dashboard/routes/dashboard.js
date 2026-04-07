@@ -1,164 +1,183 @@
 const express = require('express');
-const router = express.Router();
 const axios = require('axios');
+
+const router = express.Router();
 
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:5001/api';
 
-// Middleware to check if admin is logged in
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+});
+
 const isAuthenticated = (req, res, next) => {
-  if (req.session.adminToken) {
-    next();
-  } else {
-    res.redirect('/login');
+  if (req.session.adminToken && req.session.adminUser?.role === 'admin') {
+    return next();
+  }
+
+  res.redirect('/login');
+};
+
+const getAuthConfig = (req) => ({
+  headers: { Authorization: `Bearer ${req.session.adminToken}` },
+});
+
+const getData = async (req, endpoint, fallback = []) => {
+  try {
+    const response = await api.get(endpoint, getAuthConfig(req));
+    return response.data?.data ?? fallback;
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      req.session.destroy(() => {});
+    }
+    return fallback;
   }
 };
 
-// Login page
+const getFarmerId = (farmerRef) => {
+  if (!farmerRef) return null;
+  if (typeof farmerRef === 'string') return farmerRef;
+  return farmerRef._id || null;
+};
+
 router.get('/login', (req, res) => {
-  if (req.session.adminToken) {
+  if (req.session.adminToken && req.session.adminUser?.role === 'admin') {
     return res.redirect('/dashboard');
   }
+
   res.render('login', { error: null });
 });
 
-// Login POST
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log(email, password);
-    
-    const response = await axios.post(`${API_BASE_URL}/auth/login`, {
-      email,
-      password
+
+    const response = await api.post('/auth/login', {
+      identifier: email,
+      password,
     });
     console.log(response);
-    if (response.data.success) {
-      req.session.adminToken = response.data.data.token;
-      req.session.adminUser = response.data.data.user;
-      res.redirect('/dashboard');
-    } else {
-      res.render('login', { error: 'Invalid credentials' });
+    const authData = response.data?.data;
+    const user = authData?.user;
+    if (!response.data?.success || !authData?.token || user?.role !== 'admin') {
+      return res.render('login', {
+        error: 'Admin access is required to use this dashboard.',
+      });
     }
+
+    req.session.adminToken = authData.token;
+    req.session.adminUser = user;
+
+    res.redirect('/dashboard');
   } catch (error) {
-      console.log(error);
-    res.render('login', { error: 'Login failed. Please try again.' });
+    const message =
+      error.response?.status === 401
+        ? 'Invalid credentials'
+        : 'Login failed. Please try again.';
+
+    res.render('login', { error: message });
   }
 });
 
-// Logout
 router.get('/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/login');
+  req.session.destroy(() => {
+    res.redirect('/login');
+  });
 });
 
-// Dashboard
 router.get(['/', '/dashboard'], isAuthenticated, async (req, res) => {
-  try {
-    const token = req.session.adminToken;
-    const headers = { Authorization: `Bearer ${token}` };
+  const [users, farmers, crops, queries] = await Promise.all([
+    getData(req, '/auth/users'),
+    getData(req, '/farmers?limit=10000&page=1'),
+    getData(req, '/crops'),
+    getData(req, '/queries'),
+  ]);
 
-    // Fetch all data
-    const [usersRes, farmersRes, cropsRes] = await Promise.all([
-      axios.get(`${API_BASE_URL}/auth/users`, { headers }).catch(() => ({ data: { data: [] } })),
-      axios.get(`${API_BASE_URL}/farmers`, { headers }),
-      axios.get(`${API_BASE_URL}/crops`, { headers })
-    ]);
+  const stats = {
+    totalUsers: users.length,
+    totalFieldworkers: users.filter((user) => user.role === 'fieldworker').length,
+    totalFarmers: farmers.length,
+    totalFarmerAccounts: users.filter((user) => user.role === 'farmer').length,
+    totalCrops: crops.length,
+    totalQueries: queries.length,
+    openQueries: queries.filter((query) => query.status === 'OPEN').length,
+    resolvedQueries: queries.filter((query) => query.status === 'RESOLVED').length,
+    syncedFarmers: farmers.filter((farmer) => farmer.syncStatus === 'SYNCED').length,
+    pendingFarmers: farmers.filter((farmer) => farmer.syncStatus === 'PENDING').length,
+  };
 
-    const farmers = farmersRes.data.data || [];
-    const crops = cropsRes.data.data || [];
-    const users = usersRes.data.data || [];
+  const recentFarmers = [...farmers]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 5);
 
-    // Calculate statistics
-    const stats = {
-      totalUsers: users.length || 1,
-      totalFarmers: farmers.length,
-      totalCrops: crops.length,
-      syncedFarmers: farmers.filter(f => f.syncStatus === 'SYNCED').length,
-      pendingFarmers: farmers.filter(f => f.syncStatus === 'PENDING').length
-    };
+  const recentQueries = [...queries]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 5);
 
-    // Group crops by farmer
-    const farmerCropsMap = {};
-    crops.forEach(crop => {
-      if (!farmerCropsMap[crop.farmerId]) {
-        farmerCropsMap[crop.farmerId] = [];
-      }
-      farmerCropsMap[crop.farmerId].push(crop);
-    });
+  const topFieldworkers = users
+    .filter((user) => user.role === 'fieldworker')
+    .map((user) => ({
+      ...user,
+      farmersManaged: farmers.filter((farmer) => farmer.createdBy?._id === user._id).length,
+      openQueries: queries.filter(
+        (query) => query.fieldworkerId?._id === user._id && query.status === 'OPEN'
+      ).length,
+    }))
+    .sort((a, b) => b.farmersManaged - a.farmersManaged)
+    .slice(0, 5);
 
-    res.render('dashboard', {
-      user: req.session.adminUser,
-      stats,
-      farmers,
-      crops,
-      farmerCropsMap
-    });
-  } catch (error) {
-    console.error('Dashboard error:', error.message);
-    res.render('dashboard', {
-      user: req.session.adminUser,
-      stats: { totalUsers: 0, totalFarmers: 0, totalCrops: 0, syncedFarmers: 0, pendingFarmers: 0 },
-      farmers: [],
-      crops: [],
-      farmerCropsMap: {}
-    });
-  }
+  res.render('dashboard', {
+    user: req.session.adminUser,
+    stats,
+    recentFarmers,
+    recentQueries,
+    topFieldworkers,
+  });
 });
 
-// Farmers page
+router.get('/users', isAuthenticated, async (req, res) => {
+  const users = await getData(req, '/auth/users');
+
+  res.render('users', {
+    user: req.session.adminUser,
+    users,
+  });
+});
+
 router.get('/farmers', isAuthenticated, async (req, res) => {
-  try {
-    const token = req.session.adminToken;
-    const response = await axios.get(`${API_BASE_URL}/farmers`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+  const farmers = await getData(req, '/farmers?limit=10000&page=1');
 
-    res.render('farmers', {
-      user: req.session.adminUser,
-      farmers: response.data.data || []
-    });
-  } catch (error) {
-    res.render('farmers', {
-      user: req.session.adminUser,
-      farmers: []
-    });
-  }
+  res.render('farmers', {
+    user: req.session.adminUser,
+    farmers,
+  });
 });
 
-// Crops page
 router.get('/crops', isAuthenticated, async (req, res) => {
-  try {
-    const token = req.session.adminToken;
-    const [cropsRes, farmersRes] = await Promise.all([
-      axios.get(`${API_BASE_URL}/crops`, {
-        headers: { Authorization: `Bearer ${token}` }
-      }),
-      axios.get(`${API_BASE_URL}/farmers`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-    ]);
+  const crops = await getData(req, '/crops');
 
-    const crops = cropsRes.data.data || [];
-    const farmers = farmersRes.data.data || [];
-    
-    // Create farmer lookup
-    const farmerMap = {};
-    farmers.forEach(f => {
-      farmerMap[f._id] = f;
-    });
+  const farmerMap = {};
+  crops.forEach((crop) => {
+    const farmerId = getFarmerId(crop.farmerId);
+    if (farmerId && typeof crop.farmerId === 'object') {
+      farmerMap[farmerId] = crop.farmerId;
+    }
+  });
 
-    res.render('crops', {
-      user: req.session.adminUser,
-      crops,
-      farmerMap
-    });
-  } catch (error) {
-    res.render('crops', {
-      user: req.session.adminUser,
-      crops: [],
-      farmerMap: {}
-    });
-  }
+  res.render('crops', {
+    user: req.session.adminUser,
+    crops,
+    farmerMap,
+  });
+});
+
+router.get('/queries', isAuthenticated, async (req, res) => {
+  const queries = await getData(req, '/queries');
+
+  res.render('queries', {
+    user: req.session.adminUser,
+    queries,
+  });
 });
 
 module.exports = router;
