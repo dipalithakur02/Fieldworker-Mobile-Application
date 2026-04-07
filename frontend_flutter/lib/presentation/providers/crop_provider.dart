@@ -38,4 +38,9 @@ class CropProvider with ChangeNotifier {
     await _repository.createCrop(crop);
     await loadCrops();
   }
+
+  Future<void> updateCrop(CropModel crop) async {
+    await _repository.updateCrop(crop);
+    await loadCropsByFarmer(crop.farmerId);
+  }
 }

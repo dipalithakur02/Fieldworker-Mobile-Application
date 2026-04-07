@@ -1,13 +1,27 @@
 <header class="header">
   <div class="header-content">
+    <button
+      type="button"
+      class="hamburger"
+      id="hamburger"
+      aria-label="Toggle navigation"
+      aria-controls="sidebar"
+      aria-expanded="false"
+    >
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
     <div class="logo">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="#2E7D32">
-        <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2Z"/>
-      </svg>
-      <span>Fieldworker Admin</span>
+      <img src="/images/app-icon.png" alt="Farmer Crop App" class="brand-icon">
+      <div class="logo-copy">
+        <span class="logo-title">Farmer Crop Admin</span>
+        <span class="logo-subtitle">System monitoring</span>
+      </div>
     </div>
     <div class="header-actions">
-      <span class="user-name">👤 <%= user.name %></span>
+      <span class="user-name">Admin: <%= user.name %></span>
       <a href="/logout" class="btn-logout">Logout</a>
     </div>
   </div>

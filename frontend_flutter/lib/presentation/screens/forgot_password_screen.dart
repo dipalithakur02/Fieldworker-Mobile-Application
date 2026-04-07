@@ -21,16 +21,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       // TODO: Implement actual password reset API call
       await Future.delayed(Duration(seconds: 2)); // Simulate API call
-      
+
       setState(() {
         _emailSent = true;
         _isLoading = false;
       });
-      
-      Helpers.showSnackBar(context, 'Password reset link sent to ${_emailController.text}');
+
+      Helpers.showSnackBar(
+          context, 'Password reset link sent to ${_emailController.text}');
     } catch (e) {
       setState(() => _isLoading = false);
-      Helpers.showSnackBar(context, 'Failed to send reset email', isError: true);
+      Helpers.showSnackBar(context, 'Failed to send reset email',
+          isError: true);
     }
   }
 
@@ -43,9 +45,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(24),
-        child: _emailSent
-            ? _buildSuccessView()
-            : _buildFormView(),
+        child: _emailSent ? _buildSuccessView() : _buildFormView(),
       ),
     );
   }
@@ -73,7 +73,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             decoration: InputDecoration(
               labelText: 'Email',
               prefixIcon: Icon(Icons.email),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             ),
             validator: Validators.validateEmail,
             keyboardType: TextInputType.emailAddress,
@@ -86,7 +87,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               onPressed: _isLoading ? null : _sendResetEmail,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFF2E7D32),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               child: _isLoading
                   ? CircularProgressIndicator(color: Colors.white)

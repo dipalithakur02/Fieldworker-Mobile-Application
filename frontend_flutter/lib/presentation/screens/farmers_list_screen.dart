@@ -1,16 +1,97 @@
 import 'package:flutter/material.dart';
+import '../../data/models/farmer_model.dart';
 import '../providers/farmer_provider.dart';
 import '../widgets/farmer_card.dart';
 import 'package:provider/provider.dart';
 
 class FarmersListScreen extends StatefulWidget {
+  const FarmersListScreen({super.key});
+
   @override
-  _FarmersListScreenState createState() => _FarmersListScreenState();
+  State<FarmersListScreen> createState() => _FarmersListScreenState();
 }
 
 class _FarmersListScreenState extends State<FarmersListScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<FarmerProvider>().loadFarmers();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<bool> _showDeleteFarmerDialog(String farmerName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Delete farmer?'),
+          content: Text(
+            'Delete $farmerName and all crops linked to this farmer? This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return confirmed ?? false;
+  }
+
+  Future<void> _deleteFarmer(
+    FarmerProvider provider,
+    String farmerId,
+    String farmerName,
+  ) async {
+    final confirmed = await _showDeleteFarmerDialog(farmerName);
+    if (!confirmed || !mounted) {
+      return;
+    }
+
+    await provider.deleteFarmer(farmerId);
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$farmerName and related crops deleted'),
+      ),
+    );
+  }
+
+  Future<void> _editFarmer(FarmerModel farmer) async {
+    await Navigator.pushNamed(
+      context,
+      '/farmer-registration',
+      arguments: farmer,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await context.read<FarmerProvider>().loadFarmers();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +124,8 @@ class _FarmersListScreenState extends State<FarmersListScreen> {
                         },
                       )
                     : null,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
               onChanged: (value) {
                 setState(() => _searchQuery = value.toLowerCase());
@@ -69,7 +151,8 @@ class _FarmersListScreenState extends State<FarmersListScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.people_outline, size: 80, color: Colors.grey),
+                        Icon(Icons.people_outline,
+                            size: 80, color: Colors.grey),
                         SizedBox(height: 16),
                         Text(
                           _searchQuery.isEmpty
@@ -88,7 +171,20 @@ class _FarmersListScreenState extends State<FarmersListScreen> {
                     padding: EdgeInsets.all(16),
                     itemCount: filteredFarmers.length,
                     itemBuilder: (context, index) {
-                      return FarmerCard(farmer: filteredFarmers[index]);
+                      final farmer = filteredFarmers[index];
+                      return FarmerCard(
+                        farmer: farmer,
+                        onEdit: farmer.id == null
+                            ? null
+                            : () => _editFarmer(farmer),
+                        onDelete: farmer.id == null
+                            ? null
+                            : () => _deleteFarmer(
+                                  provider,
+                                  farmer.id!,
+                                  farmer.name,
+                                ),
+                      );
                     },
                   ),
                 );

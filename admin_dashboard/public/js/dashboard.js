@@ -1,61 +1,70 @@
 document.addEventListener('DOMContentLoaded', () => {
-
-    // Sidebar toggle
     const hamburger = document.getElementById('hamburger');
     const sidebar = document.querySelector('.sidebar');
     const overlay = document.getElementById('overlay');
+    const navItems = document.querySelectorAll('.nav-item');
+
+    const setSidebarOpen = (isOpen) => {
+        if (!sidebar || !overlay) {
+            return;
+        }
+
+        sidebar.classList.toggle('open', isOpen);
+        overlay.classList.toggle('show', isOpen);
+        document.body.classList.toggle('sidebar-open', isOpen);
+        hamburger?.setAttribute('aria-expanded', String(isOpen));
+    };
 
     hamburger?.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-        overlay.classList.toggle('show');
+        const isOpen = !sidebar?.classList.contains('open');
+        setSidebarOpen(isOpen);
     });
 
     overlay?.addEventListener('click', () => {
-        sidebar.classList.remove('open');
-        overlay.classList.remove('show');
+        setSidebarOpen(false);
     });
 
-    // Active nav
+    navItems.forEach((item) => {
+        item.addEventListener('click', () => {
+            if (window.innerWidth <= 1100) {
+                setSidebarOpen(false);
+            }
+        });
+    });
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 1100) {
+            setSidebarOpen(false);
+        }
+    });
+
     const path = location.pathname;
-    document.querySelectorAll('.nav-item').forEach(i => {
+    navItems.forEach(i => {
         if (i.getAttribute('href') === path) i.classList.add('active');
     });
 
-    // Dark mode
-    const toggle = document.getElementById('themeToggle');
-    if (localStorage.getItem('theme') === 'dark') {
-        document.body.classList.add('dark');
-    }
-
-    toggle?.addEventListener('click', () => {
-        document.body.classList.toggle('dark');
-        localStorage.setItem(
-            'theme',
-            document.body.classList.contains('dark') ? 'dark' : 'light'
-        );
-    });
-
-    // Chart
     const ctx = document.getElementById('dashboardChart');
     if (ctx) {
         new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['Users','Farmers','Crops','Synced'],
+                labels: ['Users', 'Field Workers', 'Farmers', 'Crops', 'Open Queries', 'Resolved Queries'],
                 datasets: [{
                     data: [
                         STATS.totalUsers,
+                        STATS.totalFieldworkers,
                         STATS.totalFarmers,
                         STATS.totalCrops,
-                        STATS.syncedFarmers
+                        STATS.openQueries,
+                        STATS.resolvedQueries
                     ],
-                    backgroundColor:['#2196f3','#4caf50','#ff9800','#9c27b0'],
-                    borderRadius:8
+                    backgroundColor: ['#2196f3', '#4caf50', '#ff9800', '#7b61ff', '#ff7043', '#26a69a'],
+                    borderRadius: 8
                 }]
             },
             options: {
-                plugins:{ legend:{ display:false } },
-                scales:{ y:{ beginAtZero:true } }
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
             }
         });
     }

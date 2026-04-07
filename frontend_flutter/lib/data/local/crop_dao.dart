@@ -23,6 +23,21 @@ class CropDao {
     return List.generate(maps.length, (i) => CropModel.fromMap(maps[i]));
   }
 
+  static Future<CropModel?> getById(String id) async {
+    final db = await LocalDatabase.database;
+    final maps = await db.query(
+      'crops',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (maps.isEmpty) {
+      return null;
+    }
+
+    return CropModel.fromMap(maps.first);
+  }
+
   static Future<int> update(CropModel crop) async {
     final db = await LocalDatabase.database;
     return await db.update(

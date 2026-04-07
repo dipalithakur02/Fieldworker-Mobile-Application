@@ -9,16 +9,8 @@ node server.js
 ```
 Backend will run on: http://localhost:5000
 
-### Step 2: Register Admin User
-```bash
-curl -X POST http://localhost:5000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Admin User",
-    "email": "admin@farmercrop.com",
-    "password": "admin123"
-  }'
-```
+### Step 2: Create or Update an Admin User
+Use a backend user whose `role` is `admin`. The normal `/api/auth/register` route creates a `fieldworker`, not an admin, so you need to promote a user in the database or seed one separately.
 
 ### Step 3: Start Admin Dashboard
 ```bash
@@ -36,8 +28,7 @@ http://localhost:3000
 
 ## 🔐 Login Credentials
 
-**Email:** admin@farmercrop.com  
-**Password:** admin123
+Use the email and password for a backend user whose role is `admin`.
 
 ## 📊 Dashboard Features
 

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users - Admin Dashboard</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+
+<%- include('partials/header') %>
+
+<div class="container">
+    <%- include('partials/sidebar') %>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>All Users</h1>
+            <p>Total: <%= users.length %> users across admin, field worker, and farmer roles.</p>
+        </div>
+
+        <div class="section">
+            <div class="table-container">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Email</th>
+                        <th>Mobile</th>
+                        <th>Created</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <% users.forEach((userItem, index) => { %>
+                        <tr>
+                            <td><%= index + 1 %></td>
+                            <td><strong><%= userItem.name %></strong></td>
+                            <td>
+                                <span class="badge badge-info"><%= userItem.role %></span>
+                            </td>
+                            <td><%= userItem.email || 'N/A' %></td>
+                            <td><%= userItem.mobile || 'N/A' %></td>
+                            <td><%= new Date(userItem.createdAt).toLocaleString() %></td>
+                        </tr>
+                    <% }); %>
+                    <% if (users.length === 0) { %>
+                        <tr>
+                            <td colspan="6" class="empty-state">No users found</td>
+                        </tr>
+                    <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="/js/dashboard.js"></script>
+</body>
+</html>

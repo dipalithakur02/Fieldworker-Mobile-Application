@@ -37,6 +37,8 @@
                         <th>Name</th>
                         <th>Village</th>
                         <th>Mobile</th>
+                        <th>Field Worker</th>
+                        <th>Farmer Login</th>
                         <th>Address</th>
                         <th>GPS Location</th>
                         <th>Status</th>
@@ -56,6 +58,12 @@
                             <td><%= farmer.village %></td>
 
                             <td><%= farmer.mobile %></td>
+
+                            <td><%= farmer.createdBy?.name || 'N/A' %></td>
+
+                            <td>
+                                <%= farmer.userId ? 'Enabled' : 'Not linked' %>
+                            </td>
 
                             <td><%= farmer.address || 'N/A' %></td>
 
@@ -82,7 +90,7 @@
 
                     <% if (farmers.length === 0) { %>
                         <tr>
-                            <td colspan="8" class="empty-state">
+                            <td colspan="10" class="empty-state">
                                 No farmers registered yet
                             </td>
                         </tr>
