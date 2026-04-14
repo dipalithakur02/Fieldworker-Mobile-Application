@@ -10,5 +10,8 @@ router.post('/logout', authController.logout);
 router.get('/me', protect, authController.getMe);
 router.put('/profile', protect, authController.updateProfile);
 router.get('/users', protect, authorize('admin'), authController.getUsers);
+router.post('/users', protect, authorize('admin'), authController.createUser);
+router.put('/users/:id', protect, authorize('admin'), authController.updateUser);
+router.delete('/users/:id', protect, authorize('admin'), authController.deleteUser);
 
 module.exports = router;

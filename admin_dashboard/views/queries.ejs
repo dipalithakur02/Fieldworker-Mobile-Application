@@ -1,72 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Queries - Admin Dashboard</title>
-    <link rel="stylesheet" href="/css/dashboard.css">
-</head>
-<body>
-<div class="overlay" id="overlay"></div>
+<%- include('partials/head', { title: 'Queries' }) %>
+<body data-page="queries">
+  <div class="overlay" id="overlay"></div>
 
-<%- include('partials/header') %>
+  <div class="admin-layout">
+    <%- include('partials/sidebar', { activePage }) %>
 
-<div class="container">
-    <%- include('partials/sidebar') %>
+    <div class="shell">
+      <%- include('partials/header', {
+        user,
+        title: 'Farmer Support Queue',
+        searchPlaceholder: 'Search queries, farmers, or workers...'
+      }) %>
 
-    <main class="main-content">
-        <div class="page-header">
-            <h1>Farmer Queries</h1>
-            <p>Total: <%= queries.length %> issue reports raised by farmers.</p>
-        </div>
+      <main class="page">
+        <section class="page-hero">
+          <div class="page-hero-copy">
+            <span class="eyebrow">Support Operations</span>
+            <h1 class="page-title">Farmer Queries</h1>
+            <p class="page-description">
+              Track open crop issues, farmer-raised requests, and resolution status across the support workflow.
+            </p>
+          </div>
+          <div class="hero-actions">
+            <span class="filter-chip">Open: <%= queries.filter((query) => query.status === 'OPEN').length %></span>
+            <span class="filter-chip">Resolved: <%= queries.filter((query) => query.status === 'RESOLVED').length %></span>
+          </div>
+        </section>
 
-        <div class="section">
-            <div class="table-container">
-                <table>
-                    <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Farmer</th>
-                        <th>Crop</th>
-                        <th>Field Worker</th>
-                        <th>Description</th>
-                        <th>Status</th>
-                        <th>Resolved Note</th>
-                        <th>Raised</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <% queries.forEach((query, index) => { %>
-                        <tr>
-                            <td><%= index + 1 %></td>
-                            <td>
-                                <strong><%= query.farmerId?.name || 'N/A' %></strong><br>
-                                <span class="text-muted"><%= query.farmerId?.mobile || query.farmerId?.village || 'N/A' %></span>
-                            </td>
-                            <td><%= query.cropId?.cropName || 'N/A' %></td>
-                            <td><%= query.fieldworkerId?.name || 'N/A' %></td>
-                            <td><%= query.description %></td>
-                            <td>
-                                <span class="badge <%= query.status === 'RESOLVED' ? 'badge-success' : 'badge-warning' %>">
-                                    <%= query.status %>
-                                </span>
-                            </td>
-                            <td><%= query.resolutionNote || 'Pending' %></td>
-                            <td><%= new Date(query.createdAt).toLocaleString() %></td>
-                        </tr>
-                    <% }); %>
-                    <% if (queries.length === 0) { %>
-                        <tr>
-                            <td colspan="8" class="empty-state">No queries found</td>
-                        </tr>
-                    <% } %>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </main>
-</div>
+        <section class="table-shell">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Farmer</th>
+                  <th>Crop</th>
+                  <th>Field Worker</th>
+                  <th>Description</th>
+                  <th>Status</th>
+                  <th>Raised</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% queries.forEach((query) => { %>
+                  <tr data-search-row="<%= `${query.farmerId?.name || ''} ${query.cropId?.cropName || ''} ${query.fieldworkerId?.name || ''} ${query.description || ''}` %>">
+                    <td>
+                      <div class="identity-cell">
+                        <div class="avatar"><%= ((query.farmerId?.name || 'F').charAt(0)).toUpperCase() %></div>
+                        <div class="identity-meta">
+                          <strong><%= query.farmerId?.name || 'N/A' %></strong>
+                          <span><%= query.farmerId?.mobile || query.farmerId?.village || 'N/A' %></span>
+                        </div>
+                      </div>
+                    </td>
+                    <td><%= query.cropId?.cropName || 'N/A' %></td>
+                    <td><%= query.fieldworkerId?.name || 'N/A' %></td>
+                    <td><%= query.description %></td>
+                    <td><span class="badge <%= query.status === 'RESOLVED' ? 'success' : 'pending' %>"><%= query.status %></span></td>
+                    <td>
+                      <strong><%= new Date(query.createdAt).toLocaleDateString() %></strong>
+                      <span class="meta-text"><%= query.resolutionNote || 'Pending resolution' %></span>
+                    </td>
+                  </tr>
+                <% }) %>
+                <% if (queries.length === 0) { %>
+                  <tr><td colspan="6" class="empty-state">No queries found</td></tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
 
-<script src="/js/dashboard.js"></script>
+  <script src="/js/dashboard.js"></script>
 </body>
 </html>

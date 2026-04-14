@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head', { title: 'Settings' }) %>
+<body data-page="settings">
+  <div class="overlay" id="overlay"></div>
+
+  <div class="admin-layout">
+    <%- include('partials/sidebar', { activePage }) %>
+
+    <div class="shell">
+      <%- include('partials/header', {
+        user,
+        title: 'Settings',
+        searchPlaceholder: 'Search settings...'
+      }) %>
+
+      <main class="page">
+        <section class="page-hero">
+          <div class="page-hero-copy">
+            <span class="eyebrow">System Configuration</span>
+            <h1 class="page-title">Operational Settings</h1>
+            <p class="page-description">
+              High-level visibility into the admin workspace, account coverage, and sync load across the Fieldworker Management System.
+            </p>
+          </div>
+        </section>
+
+        <section class="stats-grid">
+          <article class="metric-card">
+            <p class="metric-label">Admin Accounts</p>
+            <p class="metric-value"><%= settingsSummary.admins %></p>
+          </article>
+          <article class="metric-card">
+            <p class="metric-label">Fieldworkers</p>
+            <p class="metric-value"><%= settingsSummary.fieldworkers %></p>
+          </article>
+          <article class="metric-card">
+            <p class="metric-label">Farmers</p>
+            <p class="metric-value"><%= settingsSummary.farmers %></p>
+          </article>
+          <article class="metric-card">
+            <p class="metric-label">Pending Syncs</p>
+            <p class="metric-value"><%= settingsSummary.pendingSyncs %></p>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <article class="section-card">
+            <div class="section-head">
+              <h3>Account Governance</h3>
+            </div>
+            <div class="activity-list">
+              <div class="activity-item">
+                <div>
+                  <strong>Admin access policy</strong>
+                  <span>Only admin sessions can open this dashboard and manage workforce records.</span>
+                </div>
+                <span class="badge success">Protected</span>
+              </div>
+              <div class="activity-item">
+                <div>
+                  <strong>Fieldworker provisioning</strong>
+                  <span>Use the Fieldworkers page to create, edit, or remove staff accounts.</span>
+                </div>
+                <a href="/users" class="section-link">Open</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="section-card">
+            <div class="section-head">
+              <h3>Data Operations</h3>
+            </div>
+            <div class="activity-list">
+              <div class="activity-item">
+                <div>
+                  <strong>Sync monitoring</strong>
+                  <span>Review pending and failed data movement from field devices.</span>
+                </div>
+                <a href="/sync-logs" class="section-link">Sync Logs</a>
+              </div>
+              <div class="activity-item">
+                <div>
+                  <strong>Farmer registry health</strong>
+                  <span>Manage village assignments, login linkage, and record cleanup.</span>
+                </div>
+                <a href="/farmers" class="section-link">Farmers</a>
+              </div>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

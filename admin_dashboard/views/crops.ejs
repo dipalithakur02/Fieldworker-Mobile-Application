@@ -1,121 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crops - Admin Dashboard</title>
+<%- include('partials/head', { title: 'Crops' }) %>
+<body data-page="crops">
+  <div class="overlay" id="overlay"></div>
 
-    <!-- Global Dashboard Styles -->
-    <link rel="stylesheet" href="/css/dashboard.css">
-</head>
-<body>
+  <div class="admin-layout">
+    <%- include('partials/sidebar', { activePage }) %>
 
-<!-- Overlay for mobile sidebar -->
-<div class="overlay" id="overlay"></div>
+    <div class="shell">
+      <%- include('partials/header', {
+        user,
+        title: 'Crop Registry',
+        searchPlaceholder: 'Search crops, farmers, seasons...'
+      }) %>
 
-<!-- Header -->
-<%- include('partials/header') %>
+      <main class="page">
+        <section class="page-hero">
+          <div class="page-hero-copy">
+            <span class="eyebrow">Production Intelligence</span>
+            <h1 class="page-title">Crop Records</h1>
+            <p class="page-description">
+              Monitor crop type distribution, farmer ownership, seasonal planting, and sync readiness across field entries.
+            </p>
+          </div>
+          <div class="hero-actions">
+            <a href="/reports" class="button secondary">Yield Reports</a>
+            <a href="/sync-logs" class="button primary">Sync Status</a>
+          </div>
+        </section>
 
-<div class="container">
-    <!-- Sidebar -->
-    <%- include('partials/sidebar') %>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="page-header">
-            <h1>All Crops</h1>
-            <p>Total: <%= crops.length %> crops</p>
-        </div>
-
-        <!-- Crops Table -->
-        <div class="section">
-            <div class="table-container">
-                <table>
-                    <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Crop Name</th>
-                        <th>Type</th>
-                        <th>Farmer</th>
-                        <th>Village</th>
-                        <th>Field Worker</th>
-                        <th>Area (acres)</th>
-                        <th>Season</th>
-                        <th>Sowing Date</th>
-                        <th>Status</th>
-                    </tr>
-                    </thead>
-
-                    <tbody>
-                    <% crops.forEach((crop, index) => { %>
-                        <% const cropFarmer = crop.farmerId && typeof crop.farmerId === 'object' ? crop.farmerId : null; %>
-                        <% const farmerId = cropFarmer ? cropFarmer._id : crop.farmerId; %>
-                        <tr>
-                            <td><%= index + 1 %></td>
-
-                            <td>
-                                <strong>🌱 <%= crop.cropName %></strong>
-                            </td>
-
-                            <td><%= crop.cropType %></td>
-
-                            <td>
-                                <% if (cropFarmer) { %>
-                                    <%= cropFarmer.name %>
-                                <% } else if (farmerMap[farmerId]) { %>
-                                    <%= farmerMap[farmerId].name %>
-                                <% } else { %>
-                                    <span class="text-muted">Unknown</span>
-                                <% } %>
-                            </td>
-
-                            <td>
-                                <% if (cropFarmer) { %>
-                                    <%= cropFarmer.village %>
-                                <% } else if (farmerMap[farmerId]) { %>
-                                    <%= farmerMap[farmerId].village %>
-                                <% } else { %>
-                                    <span class="text-muted">-</span>
-                                <% } %>
-                            </td>
-
-                            <td><%= crop.createdBy?.name || 'N/A' %></td>
-
-                            <td><%= crop.area %></td>
-
-                            <td>
-                    <span class="badge badge-info">
-                      <%= crop.season %>
-                    </span>
-                            </td>
-
-                            <td>
-                                <%= new Date(crop.sowingDate).toLocaleDateString() %>
-                            </td>
-
-                            <td>
-                    <span class="badge <%= crop.syncStatus === 'SYNCED' ? 'badge-success' : 'badge-warning' %>">
-                      <%= crop.syncStatus %>
-                    </span>
-                            </td>
-                        </tr>
-                    <% }); %>
-
-                    <% if (crops.length === 0) { %>
-                        <tr>
-                            <td colspan="10" class="empty-state">
-                                No crops added yet
-                            </td>
-                        </tr>
-                    <% } %>
-                    </tbody>
-                </table>
+        <section class="stats-grid">
+          <article class="metric-card">
+            <div class="metric-card-head">
+              <div class="metric-icon"><span class="material-symbols-outlined">eco</span></div>
+              <span class="metric-pill">Registry</span>
             </div>
-        </div>
-    </main>
-</div>
+            <p class="metric-label">Total Crops</p>
+            <p class="metric-value"><%= crops.length %></p>
+          </article>
+          <article class="metric-card">
+            <div class="metric-card-head">
+              <div class="metric-icon"><span class="material-symbols-outlined">agriculture</span></div>
+              <span class="metric-pill">Seasonal</span>
+            </div>
+            <p class="metric-label">Kharif Entries</p>
+            <p class="metric-value"><%= crops.filter((crop) => crop.season === 'Kharif').length %></p>
+          </article>
+          <article class="metric-card">
+            <div class="metric-card-head">
+              <div class="metric-icon"><span class="material-symbols-outlined">check_circle</span></div>
+              <span class="metric-pill">Synced</span>
+            </div>
+            <p class="metric-label">Synced Records</p>
+            <p class="metric-value"><%= crops.filter((crop) => crop.syncStatus === 'SYNCED').length %></p>
+          </article>
+          <article class="metric-card">
+            <div class="metric-card-head">
+              <div class="metric-icon"><span class="material-symbols-outlined">pending_actions</span></div>
+              <span class="metric-pill">Pending</span>
+            </div>
+            <p class="metric-label">Pending Records</p>
+            <p class="metric-value"><%= crops.filter((crop) => crop.syncStatus !== 'SYNCED').length %></p>
+          </article>
+        </section>
 
-<!-- Global Dashboard JS (dark mode + sidebar + active nav) -->
-<script src="/js/dashboard.js"></script>
+        <section class="table-shell">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Crop Details</th>
+                  <th>Farmer</th>
+                  <th>Area</th>
+                  <th>Season</th>
+                  <th>Sowing Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% crops.forEach((crop) => { %>
+                  <% const cropFarmer = crop.farmerId && typeof crop.farmerId === 'object' ? crop.farmerId : null; %>
+                  <% const farmerId = cropFarmer ? cropFarmer._id : crop.farmerId; %>
+                  <% const lookupFarmer = farmerMap[farmerId]; %>
+                  <tr data-search-row="<%= `${crop.cropName} ${crop.cropType} ${crop.season} ${cropFarmer?.name || lookupFarmer?.name || ''}` %>">
+                    <td>
+                      <div class="identity-cell">
+                        <div class="avatar"><span class="material-symbols-outlined">eco</span></div>
+                        <div class="identity-meta">
+                          <strong><%= crop.cropName %></strong>
+                          <span><%= crop.cropType %></span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <strong><%= cropFarmer?.name || lookupFarmer?.name || 'Unknown' %></strong>
+                      <span class="meta-text"><%= cropFarmer?.village || lookupFarmer?.village || 'Village unavailable' %></span>
+                    </td>
+                    <td><%= crop.area %> acres</td>
+                    <td><span class="badge success"><%= crop.season %></span></td>
+                    <td><%= new Date(crop.sowingDate).toLocaleDateString() %></td>
+                    <td><span class="badge <%= crop.syncStatus === 'SYNCED' ? 'success' : 'pending' %>"><%= crop.syncStatus %></span></td>
+                  </tr>
+                <% }) %>
+                <% if (crops.length === 0) { %>
+                  <tr><td colspan="6" class="empty-state">No crops added yet</td></tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="/js/dashboard.js"></script>
 </body>
 </html>

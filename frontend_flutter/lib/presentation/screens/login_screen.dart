@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../core/utils/validators.dart';
-import '../../core/utils/helpers.dart';
-import '../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
+import '../../core/utils/helpers.dart';
+import '../../core/utils/validators.dart';
+import '../providers/auth_provider.dart';
+import '../widgets/field_steward_ui.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,24 +18,30 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
+  @override
+  void dispose() {
+    _identifierController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
     setState(() => _isLoading = true);
 
     try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      await authProvider.login(
-        _identifierController.text.trim(),
-        _passwordController.text,
-      );
+      await context.read<AuthProvider>().login(
+            _identifierController.text.trim(),
+            _passwordController.text,
+          );
     } catch (e) {
-      if (!mounted) return;
-      Helpers.showSnackBar(
-        context,
-        'Login failed: ${e.toString()}',
-        isError: true,
-      );
+      if (!mounted) {
+        return;
+      }
+      Helpers.showSnackBar(context, 'Login failed: $e', isError: true);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -45,98 +52,219 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF2E7D32), Color(0xFF66BB6A)],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(24),
-              child: Card(
-                elevation: 8,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-                child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+      backgroundColor: FieldStewardColors.background,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                children: [
+                  const SizedBox(height: 18),
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: FieldStewardColors.primary,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Icon(
+                      Icons.agriculture_rounded,
+                      color: Colors.white,
+                      size: 34,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'FieldSteward',
+                    style: TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.w800,
+                      color: FieldStewardColors.primaryDark,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Empowering Agriculture Through Insight',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: FieldStewardColors.onSurfaceVariant,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 36),
+                  FieldStewardSurfaceCard(
+                    color: FieldStewardColors.surfaceLow,
+                    padding: EdgeInsets.zero,
+                    child: Stack(
                       children: [
-                        Icon(Icons.agriculture,
-                            size: 80, color: Color(0xFF2E7D32)),
-                        SizedBox(height: 16),
-                        Text(
-                          'Farmer Crop App',
-                          style: TextStyle(
-                              fontSize: 24, fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(height: 8),
-                        Text('Login to continue',
-                            style: TextStyle(color: Colors.grey)),
-                        SizedBox(height: 32),
-                        TextFormField(
-                          controller: _identifierController,
-                          decoration: InputDecoration(
-                            labelText: 'Email or Mobile',
-                            prefixIcon: Icon(Icons.person_outline),
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          validator: (value) => Validators.validateRequired(
-                            value,
-                            'Email or Mobile',
-                          ),
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-                        SizedBox(height: 16),
-                        TextFormField(
-                          controller: _passwordController,
-                          decoration: InputDecoration(
-                            labelText: 'Password',
-                            prefixIcon: Icon(Icons.lock),
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          validator: Validators.validatePassword,
-                          obscureText: true,
-                        ),
-                        SizedBox(height: 24),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _login,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF2E7D32),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
+                        Container(
+                          height: 192,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(24),
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                FieldStewardColors.secondaryContainer,
+                                FieldStewardColors.primary
+                                    .withValues(alpha: 0.35),
+                                FieldStewardColors.primaryDark,
+                              ],
                             ),
-                            child: _isLoading
-                                ? CircularProgressIndicator(color: Colors.white)
-                                : Text('Login', style: TextStyle(fontSize: 16)),
                           ),
                         ),
-                        SizedBox(height: 16),
-                        TextButton(
-                          onPressed: () =>
-                              Navigator.pushNamed(context, '/forgot-password'),
-                          child: Text('Forgot Password?'),
+                        Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(24),
+                              gradient: LinearGradient(
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                                colors: [
+                                  Colors.white.withValues(alpha: 0.08),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                        TextButton(
-                          onPressed: () =>
-                              Navigator.pushNamed(context, '/register'),
-                          child: Text('Don\'t have an account? Register'),
+                        Positioned.fill(
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 18,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.78),
+                                borderRadius: BorderRadius.circular(22),
+                              ),
+                              child: const Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.verified_user_outlined,
+                                    color: FieldStewardColors.primaryDark,
+                                    size: 30,
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Fieldworker Access',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ),
+                  const SizedBox(height: 32),
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        FieldStewardTextField(
+                          controller: _identifierController,
+                          label: 'Email Address',
+                          hintText: 'steward@field.com',
+                          icon: Icons.mail_outline_rounded,
+                          validator: (value) => Validators.validateRequired(
+                              value, 'Email or Mobile'),
+                        ),
+                        const SizedBox(height: 18),
+                        FieldStewardTextField(
+                          controller: _passwordController,
+                          label: 'Secure Password',
+                          hintText: '••••••••',
+                          icon: Icons.lock_outline_rounded,
+                          obscureText: true,
+                          validator: Validators.validatePassword,
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => Navigator.pushNamed(
+                              context,
+                              '/forgot-password',
+                            ),
+                            child: const Text(
+                              'Forgot Password?',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: FieldStewardColors.primaryDark,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        FieldStewardPrimaryButton(
+                          onPressed: _isLoading ? null : _login,
+                          icon: Icons.arrow_forward_rounded,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text(
+                                  'Sign In',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  const Text(
+                    'New to the steward program?',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: FieldStewardColors.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton(
+                    onPressed: () => Navigator.pushNamed(context, '/register'),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide.none,
+                      backgroundColor: FieldStewardColors.surfaceLow,
+                      foregroundColor: FieldStewardColors.onSurfaceVariant,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 28,
+                        vertical: 16,
+                      ),
+                    ),
+                    child: const Text(
+                      'Contact Coordinator',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  const SizedBox(height: 36),
+                  Text(
+                    'STEWARD',
+                    style: TextStyle(
+                      fontSize: 64,
+                      fontWeight: FontWeight.w900,
+                      color: FieldStewardColors.primary.withValues(alpha: 0.08),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

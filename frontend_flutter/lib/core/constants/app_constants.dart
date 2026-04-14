@@ -1,7 +1,7 @@
 class AppConstants {
   static const String appName = 'Farmer Crop App';
-  // static const String baseUrl = 'https://fieldworker-mobile-app-backend.onrender.com/api';
-  static const String baseUrl = 'http://10.0.2.2:5001/api';
+  static const String baseUrl = 'https://fieldworker-mobile-app-backend.onrender.com/api';
+  // static const String baseUrl = 'http://10.0.2.2:5001/api';
   // Colors
   static const primaryColor = 0xFF2E7D32;
   static const secondaryColor = 0xFF66BB6A;

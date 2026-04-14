@@ -1,19 +1,52 @@
 <aside class="sidebar" id="sidebar">
-    <nav>
-        <a href="/dashboard" class="nav-item">
-            <span class="icon">📊</span> Dashboard
-        </a>
-        <a href="/users" class="nav-item">
-            <span class="icon">👥</span> Users
-        </a>
-        <a href="/farmers" class="nav-item">
-            <span class="icon">🌾</span> Farmers
-        </a>
-        <a href="/crops" class="nav-item">
-            <span class="icon">🌱</span> Crops
-        </a>
-        <a href="/queries" class="nav-item">
-            <span class="icon">🩺</span> Queries
-        </a>
-    </nav>
+  <div class="sidebar-brand">
+    <h1>Fieldworker</h1>
+    <p>Management System</p>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="/dashboard" class="nav-item <%= activePage === 'dashboard' ? 'active' : '' %>">
+      <span class="material-symbols-outlined">dashboard</span>
+      <span>Dashboard</span>
+    </a>
+    <a href="/farmers" class="nav-item <%= activePage === 'farmers' ? 'active' : '' %>">
+      <span class="material-symbols-outlined">person_pin</span>
+      <span>Farmers</span>
+    </a>
+    <a href="/users" class="nav-item <%= activePage === 'users' ? 'active' : '' %>">
+      <span class="material-symbols-outlined">badge</span>
+      <span>Fieldworkers</span>
+    </a>
+    <a href="/crops" class="nav-item <%= activePage === 'crops' ? 'active' : '' %>">
+      <span class="material-symbols-outlined">eco</span>
+      <span>Crops</span>
+    </a>
+    <a href="/sync-logs" class="nav-item <%= activePage === 'sync-logs' ? 'active' : '' %>">
+      <span class="material-symbols-outlined">sync</span>
+      <span>Sync Logs</span>
+    </a>
+    <a href="/queries" class="nav-item <%= activePage === 'queries' ? 'active' : '' %>">
+      <span class="material-symbols-outlined">support_agent</span>
+      <span>Queries</span>
+    </a>
+    <a href="/settings" class="nav-item <%= activePage === 'settings' ? 'active' : '' %>">
+      <span class="material-symbols-outlined">settings</span>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <a href="/dashboard" class="sidebar-primary-action">
+      <span class="material-symbols-outlined">add_circle</span>
+      <span>System Overview</span>
+    </a>
+    <a href="/reports" class="nav-item subtle">
+      <span class="material-symbols-outlined">contact_support</span>
+      <span>Reports</span>
+    </a>
+    <a href="/logout" class="nav-item danger">
+      <span class="material-symbols-outlined">logout</span>
+      <span>Log Out</span>
+    </a>
+  </div>
 </aside>

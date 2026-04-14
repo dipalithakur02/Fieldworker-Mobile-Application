@@ -3,8 +3,10 @@ import '../../core/utils/validators.dart';
 import '../../core/utils/helpers.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({super.key});
+
   @override
-  _ForgotPasswordScreenState createState() => _ForgotPasswordScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
@@ -20,7 +22,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     try {
       // TODO: Implement actual password reset API call
-      await Future.delayed(Duration(seconds: 2)); // Simulate API call
+      await Future.delayed(const Duration(seconds: 2));
+
+      if (!mounted) {
+        return;
+      }
 
       setState(() {
         _emailSent = true;
@@ -30,10 +36,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       Helpers.showSnackBar(
           context, 'Password reset link sent to ${_emailController.text}');
     } catch (e) {
+      if (!mounted) {
+        return;
+      }
       setState(() => _isLoading = false);
       Helpers.showSnackBar(context, 'Failed to send reset email',
           isError: true);
     }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
   }
 
   @override

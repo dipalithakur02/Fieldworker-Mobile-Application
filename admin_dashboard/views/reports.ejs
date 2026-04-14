@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head', { title: 'Reports' }) %>
+<body data-page="reports">
+  <div class="overlay" id="overlay"></div>
+
+  <div class="admin-layout">
+    <%- include('partials/sidebar', { activePage }) %>
+
+    <div class="shell">
+      <%- include('partials/header', {
+        user,
+        title: 'Reports Center',
+        searchPlaceholder: 'Search reports...'
+      }) %>
+
+      <main class="page">
+        <section class="page-hero">
+          <div class="page-hero-copy">
+            <span class="eyebrow">Analytical Intelligence</span>
+            <h1 class="page-title">Data Integrity &amp;<br>Performance Insights</h1>
+            <p class="page-description">
+              Extract high-fidelity operational reporting across farmers, crops, users, and support activity.
+            </p>
+          </div>
+          <div class="hero-actions">
+            <button type="button" class="button secondary">
+              <span class="material-symbols-outlined">schedule</span>
+              <span>Automate</span>
+            </button>
+            <button type="button" class="button primary">
+              <span class="material-symbols-outlined">add_chart</span>
+              <span>Custom Report</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="overview-grid">
+          <article class="section-card tonal">
+            <div class="section-head">
+              <h3>Refine Dataset</h3>
+              <span class="section-link">Reset Filters</span>
+            </div>
+            <div class="content-grid" style="margin-bottom: 0;">
+              <div>
+                <label class="field-label">Date Range</label>
+                <select class="field-control">
+                  <option>Last 30 Days</option>
+                  <option>Current Quarter</option>
+                  <option>Current Year</option>
+                </select>
+              </div>
+              <div>
+                <label class="field-label">Geographic Zone</label>
+                <select class="field-control">
+                  <option>All Locations</option>
+                  <option>North Plateau</option>
+                  <option>Central Valley</option>
+                </select>
+              </div>
+            </div>
+          </article>
+
+          <article class="gradient-card">
+            <div class="metric-label" style="color: rgba(255,255,255,0.75);">Reports Generated This Session</div>
+            <div class="metric-value"><%= summary.totalReports %></div>
+            <div class="metric-subtext muted-on-dark"><%= summary.farmers %> farmers, <%= summary.crops %> crops, <%= summary.users %> users covered</div>
+          </article>
+        </section>
+
+        <section class="report-grid">
+          <% reportCards.forEach((report) => { %>
+            <article class="report-card" data-search-row="<%= `${report.title} ${report.category} ${report.description}` %>">
+              <div class="report-icon"><span class="material-symbols-outlined"><%= report.icon %></span></div>
+              <span class="report-tag"><%= report.category %></span>
+              <h3><%= report.title %></h3>
+              <p><%= report.description %></p>
+              <div class="meta-text"><%= report.metric %></div>
+              <div class="export-buttons">
+                <button type="button" class="button ghost small">PDF</button>
+                <button type="button" class="button ghost small">Excel</button>
+              </div>
+            </article>
+          <% }) %>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

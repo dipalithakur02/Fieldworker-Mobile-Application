@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head', { title: 'Sync Logs' }) %>
+<body data-page="sync-logs">
+  <div class="overlay" id="overlay"></div>
+
+  <div class="admin-layout">
+    <%- include('partials/sidebar', { activePage }) %>
+
+    <div class="shell">
+      <%- include('partials/header', {
+        user,
+        title: 'Sync Logs',
+        searchPlaceholder: 'Search sync logs...'
+      }) %>
+
+      <main class="page">
+        <section class="page-hero">
+          <div class="page-hero-copy">
+            <span class="eyebrow">System Integrity</span>
+            <h1 class="page-title">Sync Logs</h1>
+            <p class="page-description">
+              Monitor offline-to-online data transmission, queue health, and operational consistency across uploaded records.
+            </p>
+          </div>
+          <div class="hero-actions">
+            <button type="button" class="button secondary">
+              <span class="material-symbols-outlined">filter_list</span>
+              <span>Filter</span>
+            </button>
+            <button type="button" class="button primary">
+              <span class="material-symbols-outlined">sync</span>
+              <span>Force Sync All</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="kpi-strip">
+          <article class="section-card tonal">
+            <div class="metric-label">Success Rate</div>
+            <div class="metric-value"><%= syncSummary.successRate %>%</div>
+          </article>
+          <article class="section-card tonal">
+            <div class="metric-label">Failed Logs</div>
+            <div class="metric-value" style="color: var(--tertiary-container);"><%= syncSummary.failed %></div>
+          </article>
+          <article class="section-card tonal">
+            <div class="metric-label">Pending Logs</div>
+            <div class="metric-value"><%= syncSummary.pending %></div>
+          </article>
+        </section>
+
+        <section class="table-shell">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Record ID</th>
+                  <th>Data Origin</th>
+                  <th>Status</th>
+                  <th>Timestamp</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% syncLogs.forEach((log) => { %>
+                  <tr data-search-row="<%= `${log.recordId} ${log.origin} ${log.detail} ${log.status}` %>">
+                    <td class="mono"><strong><%= log.recordId %></strong></td>
+                    <td>
+                      <strong><%= log.origin %></strong>
+                      <span class="meta-text"><%= log.detail %> • <%= log.type %></span>
+                    </td>
+                    <td>
+                      <span class="badge <%= log.status === 'SYNCED' ? 'success' : log.status === 'FAILED' ? 'error' : 'pending' %>"><%= log.status %></span>
+                    </td>
+                    <td><%= new Date(log.timestamp).toLocaleString() %></td>
+                    <td>
+                      <div class="action-row">
+                        <% if (log.status === 'FAILED') { %>
+                          <button type="button" class="button primary small">Retry sync</button>
+                        <% } else { %>
+                          <button type="button" class="action-button"><span class="material-symbols-outlined">more_vert</span></button>
+                        <% } %>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+                <% if (syncLogs.length === 0) { %>
+                  <tr><td colspan="5" class="empty-state">No sync logs available</td></tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

@@ -11,6 +11,11 @@ exports.createFarmer = async (req, res) => {
       ...farmerPayload
     } = req.body;
 
+    const assignedFieldworker =
+      req.user.role === 'admin' && farmerPayload.createdBy
+        ? farmerPayload.createdBy
+        : req.user.id;
+
     let linkedUser = null;
     if (createLoginAccount) {
       if (!accountPassword) {
@@ -31,7 +36,7 @@ exports.createFarmer = async (req, res) => {
     const farmer = await Farmer.create({
       ...farmerPayload,
       userId: linkedUser?._id ?? null,
-      createdBy: req.user.id,
+      createdBy: assignedFieldworker,
     });
 
     res.status(201).json({ success: true, message: 'Farmer created', data: farmer });
@@ -105,6 +110,10 @@ exports.updateFarmer = async (req, res) => {
       accountPassword,
       ...updates
     } = req.body;
+
+    if (req.user.role !== 'admin') {
+      delete updates.createdBy;
+    }
 
     const farmerLookup = { _id: req.params.id };
     if (req.user.role !== 'admin') {

@@ -1,28 +1,45 @@
-<header class="header">
-  <div class="header-content">
+<header class="topbar">
+  <div class="topbar-left">
     <button
       type="button"
-      class="hamburger"
-      id="hamburger"
+      class="mobile-nav-toggle"
+      id="mobileNavToggle"
       aria-label="Toggle navigation"
       aria-controls="sidebar"
       aria-expanded="false"
     >
-      <span></span>
-      <span></span>
-      <span></span>
+      <span class="material-symbols-outlined">menu</span>
     </button>
 
-    <div class="logo">
-      <img src="/images/app-icon.png" alt="Farmer Crop App" class="brand-icon">
-      <div class="logo-copy">
-        <span class="logo-title">Farmer Crop Admin</span>
-        <span class="logo-subtitle">System monitoring</span>
+    <div class="topbar-brand"><%= title %></div>
+
+    <label class="topbar-search">
+      <span class="material-symbols-outlined">search</span>
+      <input
+        type="text"
+        id="pageSearch"
+        placeholder="<%= searchPlaceholder || 'Search dashboard data...' %>"
+      >
+    </label>
+  </div>
+
+  <div class="topbar-right">
+    <button type="button" class="icon-button">
+      <span class="material-symbols-outlined">notifications</span>
+      <span class="notification-dot"></span>
+    </button>
+    <button type="button" class="icon-button">
+      <span class="material-symbols-outlined">help_outline</span>
+    </button>
+    <div class="topbar-divider"></div>
+    <div class="profile-chip">
+      <div class="profile-copy">
+        <span class="profile-label">Admin Profile</span>
+        <span class="profile-name"><%= user?.name || 'Administrator' %></span>
       </div>
-    </div>
-    <div class="header-actions">
-      <span class="user-name">Admin: <%= user.name %></span>
-      <a href="/logout" class="btn-logout">Logout</a>
+      <div class="profile-avatar">
+        <img src="/images/app-icon.png" alt="Admin avatar">
+      </div>
     </div>
   </div>
 </header>

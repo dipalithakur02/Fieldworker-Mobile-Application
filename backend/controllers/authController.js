@@ -238,3 +238,109 @@ exports.getUsers = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+exports.createUser = async (req, res) => {
+  try {
+    const { name, email, mobile, password, role } = req.body;
+
+    if (!name || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name and password are required',
+      });
+    }
+
+    const normalizedRole = role === 'admin' ? 'admin' : 'fieldworker';
+    const user = await User.create({
+      name,
+      email: email || undefined,
+      mobile: mobile || undefined,
+      password,
+      role: normalizedRole,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: `${normalizedRole === 'admin' ? 'Admin' : 'Fieldworker'} created`,
+      data: await buildUserPayload(user),
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.updateUser = async (req, res) => {
+  try {
+    const { name, email, mobile, password, role } = req.body;
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (user.role === 'farmer') {
+      return res.status(400).json({
+        success: false,
+        message: 'Farmer-linked accounts must be managed from farmer records',
+      });
+    }
+
+    if (name != null) user.name = name;
+    if (email != null) user.email = email || undefined;
+    if (mobile != null) user.mobile = mobile || undefined;
+    if (password) user.password = password;
+    if (role && ['fieldworker', 'admin'].includes(role)) {
+      user.role = role;
+    }
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'User updated',
+      data: await buildUserPayload(user),
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  try {
+    if (req.user.id === req.params.id) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot delete the active admin account',
+      });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (user.role === 'farmer') {
+      return res.status(400).json({
+        success: false,
+        message: 'Farmer-linked accounts must be deleted from farmer records',
+      });
+    }
+
+    const assignedFarmerCount = await Farmer.countDocuments({ createdBy: user._id });
+    if (assignedFarmerCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Reassign ${assignedFarmerCount} farmer records before deleting this fieldworker`,
+      });
+    }
+
+    await user.deleteOne();
+
+    res.json({
+      success: true,
+      message: 'User deleted',
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

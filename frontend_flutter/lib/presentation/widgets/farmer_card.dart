@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../data/models/farmer_model.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../data/models/farmer_model.dart';
 import 'avatar_view.dart';
+import 'field_steward_ui.dart';
 
 class FarmerCard extends StatelessWidget {
   final FarmerModel farmer;
@@ -16,172 +17,294 @@ class FarmerCard extends StatelessWidget {
   });
 
   Future<void> _makePhoneCall(String phoneNumber) async {
-    final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
-    await launchUrl(launchUri);
+    await launchUrl(Uri(scheme: 'tel', path: phoneNumber));
   }
 
-  Future<void> _sendSMS(String phoneNumber) async {
-    final Uri launchUri = Uri(scheme: 'sms', path: phoneNumber);
-    await launchUrl(launchUri);
+  Future<void> _sendSms(String phoneNumber) async {
+    await launchUrl(Uri(scheme: 'sms', path: phoneNumber));
   }
 
   Future<void> _openWhatsApp(String phoneNumber) async {
-    final Uri launchUri = Uri.parse('https://wa.me/$phoneNumber');
-    await launchUrl(launchUri, mode: LaunchMode.externalApplication);
+    await launchUrl(
+      Uri.parse('https://wa.me/$phoneNumber'),
+      mode: LaunchMode.externalApplication,
+    );
+  }
+
+  Future<void> _showActions(BuildContext context) async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 44,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 18),
+                  decoration: BoxDecoration(
+                    color: FieldStewardColors.outline,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.edit_outlined),
+                  title: const Text('Edit farmer'),
+                  onTap: () => Navigator.pop(context, 'edit'),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.delete_outline, color: Colors.red),
+                  title: const Text('Delete farmer'),
+                  textColor: Colors.red,
+                  onTap: () => Navigator.pop(context, 'delete'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (action == 'edit') {
+      await onEdit?.call();
+    } else if (action == 'delete') {
+      await onDelete?.call();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 3,
-      margin: EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ExpansionTile(
-        leading: AvatarView(
-          imagePath: farmer.profileImagePath,
-          fallbackLabel: farmer.name,
-          radius: 22,
-        ),
-        title: Text(
-          farmer.name,
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(Icons.location_city, size: 14, color: Colors.grey),
-                SizedBox(width: 4),
-                Text(farmer.village),
-              ],
-            ),
-            SizedBox(height: 2),
-            Row(
-              children: [
-                Icon(Icons.phone, size: 14, color: Colors.grey),
-                SizedBox(width: 4),
-                Text(farmer.mobile),
-              ],
-            ),
-          ],
-        ),
-        trailing: Container(
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: farmer.syncStatus == 'SYNCED' ? Colors.green : Colors.orange,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            farmer.syncStatus,
-            style: TextStyle(color: Colors.white, fontSize: 10),
-          ),
-        ),
+    final synced = farmer.syncStatus.toUpperCase() == 'SYNCED';
+
+    return FieldStewardSurfaceCard(
+      padding: const EdgeInsets.all(22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              children: [
-                if (farmer.latitude != null && farmer.longitude != null)
-                  ListTile(
-                    leading: Icon(Icons.location_on, color: Colors.red),
-                    title: Text('Location'),
-                    subtitle: Text(
-                        '${farmer.latitude!.toStringAsFixed(4)}, ${farmer.longitude!.toStringAsFixed(4)}'),
-                  ),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  alignment: WrapAlignment.center,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AvatarView(
+                imagePath: farmer.profileImagePath,
+                fallbackLabel: farmer.name,
+                radius: 30,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ElevatedButton.icon(
-                      onPressed: () => _makePhoneCall(farmer.mobile),
-                      icon: Icon(Icons.call, size: 18),
-                      label: Text('Call'),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green),
+                    Text(
+                      farmer.name,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: FieldStewardColors.onSurface,
+                      ),
                     ),
-                    ElevatedButton.icon(
-                      onPressed: () => _sendSMS(farmer.mobile),
-                      icon: Icon(Icons.sms, size: 18),
-                      label: Text('SMS'),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () => _openWhatsApp(farmer.mobile),
-                      icon: Icon(Icons.chat, size: 18),
-                      label: Text('WhatsApp'),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on_rounded,
+                          size: 16,
+                          color: FieldStewardColors.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            farmer.village,
+                            style: const TextStyle(
+                              color: FieldStewardColors.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                SizedBox(height: 8),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    if (farmer.id == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Farmer ID not available")),
-                      );
-                      return;
-                    }
-
-                    Navigator.pushNamed(
-                      context,
-                      '/crop-entry',
-                      arguments: farmer.id!,
-                    );
-                  },
-                  icon: Icon(Icons.add),
-                  label: Text('Add Crop'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF2E7D32),
-                    minimumSize: Size(double.infinity, 40),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  FieldStewardStatusBadge(
+                    label: synced ? 'Synced' : farmer.syncStatus,
+                    backgroundColor: synced
+                        ? const Color(0xFFE8F5E9)
+                        : const Color(0xFFFFF8E1),
+                    foregroundColor: synced
+                        ? FieldStewardColors.success
+                        : FieldStewardColors.warning,
+                    icon: Icons.circle,
+                  ),
+                  IconButton(
+                    onPressed: () => _showActions(context),
+                    icon: const Icon(Icons.more_horiz_rounded),
+                    color: FieldStewardColors.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: FieldStewardColors.surfaceLow,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: synced ? Colors.transparent : FieldStewardColors.outline,
+                style: synced ? BorderStyle.none : BorderStyle.solid,
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'MOBILE',
+                        style: TextStyle(
+                          color: FieldStewardColors.onSurfaceVariant,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        farmer.mobile,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    if (farmer.id == null) {
-                      return;
-                    }
-                    Navigator.pushNamed(
-                      context,
-                      '/crops',
-                      arguments: farmer.id!,
-                    );
-                  },
-                  icon: Icon(Icons.list_alt),
-                  label: Text('View Crops'),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: Size(double.infinity, 40),
-                  ),
+                const SizedBox(width: 12),
+                _SmallRoundAction(
+                  icon: Icons.call_rounded,
+                  color: FieldStewardColors.primaryDark,
+                  onTap: () => _makePhoneCall(farmer.mobile),
                 ),
-                SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Edit Farmer'),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 40),
-                  ),
-                ),
-                SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: onDelete,
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  label: const Text('Delete Farmer'),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 40),
-                    foregroundColor: Colors.red,
-                  ),
+                const SizedBox(width: 8),
+                _SmallRoundAction(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  color: const Color(0xFF25D366),
+                  onTap: () => _openWhatsApp(farmer.mobile),
                 ),
               ],
             ),
           ),
+          if ((farmer.address ?? '').trim().isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Text(
+              farmer.address!,
+              style: const TextStyle(
+                color: FieldStewardColors.onSurfaceVariant,
+                height: 1.45,
+              ),
+            ),
+          ],
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: FieldStewardPrimaryButton(
+                  onPressed: farmer.id == null
+                      ? null
+                      : () {
+                          Navigator.pushNamed(
+                            context,
+                            '/crop-entry',
+                            arguments: farmer.id!,
+                          );
+                        },
+                  icon: Icons.eco_rounded,
+                  child: const Text(
+                    'Add Crop',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              _SquareAction(
+                icon: Icons.sms_outlined,
+                onTap: () => _sendSms(farmer.mobile),
+              ),
+            ],
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _SmallRoundAction extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _SmallRoundAction({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 42,
+          height: 42,
+          child: Icon(icon, color: color, size: 20),
+        ),
+      ),
+    );
+  }
+}
+
+class _SquareAction extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _SquareAction({
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: FieldStewardColors.surfaceHighest,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: SizedBox(
+          width: 56,
+          height: 56,
+          child: Icon(
+            icon,
+            color: FieldStewardColors.onSurface,
+          ),
+        ),
       ),
     );
   }
